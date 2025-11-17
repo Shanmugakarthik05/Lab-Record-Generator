@@ -1681,6 +1681,12 @@
   }
 
   @media (width >= 48rem) {
+    .md\:grid-cols-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  @media (width >= 48rem) {
     .md\:grid-cols-12 {
       grid-template-columns: repeat(12, minmax(0, 1fr));
     }

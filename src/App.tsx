@@ -22,7 +22,7 @@ export interface CourseInfo {
 }
 
 export interface TheoryExperiment {
-  exp_no: number;
+  exp_no: string;
   date: string;
   experiment_title: string;
   github_url: string;

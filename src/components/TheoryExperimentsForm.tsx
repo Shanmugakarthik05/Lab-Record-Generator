@@ -14,7 +14,7 @@ interface TheoryExperimentsFormProps {
 export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryExperimentsFormProps) {
   const [experiments, setExperiments] = useState<TheoryExperiment[]>(
     initialData.length > 0 ? initialData : [
-      { exp_no: 1, date: '', experiment_title: '', github_url: '', marks: '' }
+      { exp_no: '1', date: '', experiment_title: '', github_url: '', marks: '' }
     ]
   );
 
@@ -22,7 +22,7 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
     setExperiments([
       ...experiments,
       { 
-        exp_no: experiments.length + 1, 
+        exp_no: String(experiments.length + 1), 
         date: '', 
         experiment_title: '', 
         github_url: '', 
@@ -33,9 +33,7 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
 
   const removeExperiment = (index: number) => {
     const updated = experiments.filter((_, i) => i !== index);
-    // Renumber experiments
-    const renumbered = updated.map((exp, i) => ({ ...exp, exp_no: i + 1 }));
-    setExperiments(renumbered);
+    setExperiments(updated);
   };
 
   const updateExperiment = (index: number, field: keyof TheoryExperiment, value: string | number) => {
@@ -50,7 +48,7 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
   };
 
   const isValid = experiments.length > 0 && experiments.every(exp => 
-    exp.experiment_title && exp.github_url
+    exp.exp_no && exp.experiment_title && exp.github_url
   );
 
   return (
@@ -76,7 +74,18 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
               )}
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
+            <div className="grid md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor={`exp-no-${index}`}>Exp No. *</Label>
+                <Input
+                  id={`exp-no-${index}`}
+                  value={exp.exp_no}
+                  onChange={(e) => updateExperiment(index, 'exp_no', e.target.value)}
+                  placeholder="e.g., 1, 1a, 1b"
+                  required
+                />
+              </div>
+
               <div>
                 <Label htmlFor={`date-${index}`}>Date</Label>
                 <Input
