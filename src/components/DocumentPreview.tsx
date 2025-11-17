@@ -91,8 +91,8 @@ export function DocumentPreview({ courseInfo, theoryExperiments, programmingSess
                           {exp.github_url}
                         </a>
                       </td>
-                      <td className="border border-black p-2 text-center align-top">
-                        <div className="flex justify-center">
+                      <td className="border border-black p-2 text-center align-middle">
+                        <div className="flex justify-center items-center h-full">
                           <QRCode value={ensureHttpsPrefix(exp.github_url)} size={64} />
                         </div>
                       </td>
@@ -126,29 +126,29 @@ export function DocumentPreview({ courseInfo, theoryExperiments, programmingSess
                     <tr key={session.session_no}>
                       <td className="border border-black p-3 text-center align-top">{session.session_no}</td>
                       <td className="border border-black p-3 align-top text-sm">
-                        {session.sub_experiments.map((sub) => (
+                        {session.sub_experiments.map((sub, idx) => (
                           sub.date && (
-                            <div key={sub.label} className="mb-1">{formatDate(sub.date)}</div>
+                            <div key={sub.label} style={{ marginBottom: idx < session.sub_experiments.length - 1 ? '0.75em' : '0' }}>
+                              {formatDate(sub.date)}
+                            </div>
                           )
                         ))}
                       </td>
                       <td className="border border-black p-3 align-top text-sm">
-                        <div className="space-y-1 mb-2">
-                          {session.sub_experiments.map((sub) => (
-                            <div key={sub.label}>
-                              {sub.label}. {sub.title}
-                            </div>
-                          ))}
-                        </div>
-                        <div className="text-xs mt-2 pt-2 border-t border-gray-300">
+                        {session.sub_experiments.map((sub, idx) => (
+                          <div key={sub.label} style={{ marginBottom: idx < session.sub_experiments.length - 1 ? '0.75em' : '0' }}>
+                            {sub.label}. {sub.title}
+                          </div>
+                        ))}
+                        <div className="text-xs mt-3 pt-2 border-t border-gray-300">
                           <span className="text-gray-600">URL: </span>
                           <a href={ensureHttpsPrefix(session.github_url)} className="text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer">
                             {session.github_url}
                           </a>
                         </div>
                       </td>
-                      <td className="border border-black p-2 text-center align-top">
-                        <div className="flex justify-center">
+                      <td className="border border-black p-2 text-center align-middle">
+                        <div className="flex justify-center items-center h-full">
                           <QRCode value={ensureHttpsPrefix(session.github_url)} size={64} />
                         </div>
                       </td>

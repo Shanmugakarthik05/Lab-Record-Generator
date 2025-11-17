@@ -55,13 +55,33 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
     setSessions(updated);
   };
 
+  const removeSubExperiment = (sessionIndex: number, subIndex: number) => {
+    const updated = [...sessions];
+    updated[sessionIndex].sub_experiments.splice(subIndex, 1);
+    setSessions(updated);
+  };
+
+  const addSubExperiment = (sessionIndex: number) => {
+    const updated = [...sessions];
+    const existingLabels = updated[sessionIndex].sub_experiments.map(sub => sub.label);
+    const availableLabels = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J'];
+    const nextLabel = availableLabels.find(label => !existingLabels.includes(label)) || 'X';
+    
+    updated[sessionIndex].sub_experiments.push({
+      label: nextLabel,
+      date: '',
+      title: ''
+    });
+    setSessions(updated);
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(sessions);
   };
 
   const isValid = sessions.length > 0 && sessions.every(session => 
-    session.github_url && session.sub_experiments.every(sub => sub.title)
+    session.github_url && session.sub_experiments.length > 0 && session.sub_experiments.every(sub => sub.title)
   );
 
   return (
@@ -87,26 +107,14 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
               )}
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4 mb-4">
-              <div>
-                <Label htmlFor={`session-date-${sessionIndex}`}>Session Date</Label>
-                <Input
-                  id={`session-date-${sessionIndex}`}
-                  type="date"
-                  value={session.date}
-                  onChange={(e) => updateSession(sessionIndex, 'date', e.target.value)}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor={`session-marks-${sessionIndex}`}>Marks</Label>
-                <Input
-                  id={`session-marks-${sessionIndex}`}
-                  value={session.marks}
-                  onChange={(e) => updateSession(sessionIndex, 'marks', e.target.value)}
-                  placeholder="e.g., 95"
-                />
-              </div>
+            <div className="mb-4">
+              <Label htmlFor={`session-marks-${sessionIndex}`}>Marks</Label>
+              <Input
+                id={`session-marks-${sessionIndex}`}
+                value={session.marks}
+                onChange={(e) => updateSession(sessionIndex, 'marks', e.target.value)}
+                placeholder="e.g., 95"
+              />
             </div>
 
             <div className="mb-4">
@@ -122,9 +130,21 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
             </div>
 
             <div className="space-y-3 bg-white p-4 rounded-lg">
-              <h4 className="text-purple-800 mb-3">Sub-Experiments</h4>
+              <div className="flex items-center justify-between mb-3">
+                <h4 className="text-purple-800">Sub-Experiments</h4>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addSubExperiment(sessionIndex)}
+                  className="text-xs border-purple-300 text-purple-700 hover:bg-purple-50"
+                >
+                  <Plus className="w-3 h-3 mr-1" />
+                  Add Sub-Exp
+                </Button>
+              </div>
               {session.sub_experiments.map((subExp, subIndex) => (
-                <div key={subIndex} className="grid md:grid-cols-12 gap-2 items-end">
+                <div key={subIndex} className="grid md:grid-cols-12 gap-2 items-end p-3 bg-gray-50 rounded-md border border-gray-200">
                   <div className="md:col-span-1">
                     <Label className="text-xs">Label</Label>
                     <div className="h-10 flex items-center justify-center bg-purple-100 rounded-md">
@@ -141,7 +161,7 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
                       className="h-10"
                     />
                   </div>
-                  <div className="md:col-span-8">
+                  <div className="md:col-span-7">
                     <Label htmlFor={`sub-title-${sessionIndex}-${subIndex}`} className="text-xs">Title *</Label>
                     <Input
                       id={`sub-title-${sessionIndex}-${subIndex}`}
@@ -151,6 +171,17 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
                       required
                       className="h-10"
                     />
+                  </div>
+                  <div className="md:col-span-1 flex items-end">
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => removeSubExperiment(sessionIndex, subIndex)}
+                      className="text-red-600 hover:text-red-700 hover:bg-red-50 h-10 w-full"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 </div>
               ))}
