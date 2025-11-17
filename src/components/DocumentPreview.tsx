@@ -122,40 +122,72 @@ export function DocumentPreview({ courseInfo, theoryExperiments, programmingSess
                   </tr>
                 </thead>
                 <tbody>
-                  {programmingSessions.map((session) => (
-                    <tr key={session.session_no}>
-                      <td className="border border-black p-3 text-center align-top">{session.session_no}</td>
-                      <td className="border border-black p-3 align-top text-sm">
-                        {session.sub_experiments.map((sub, idx) => (
-                          sub.date && (
-                            <div key={sub.label} style={{ marginBottom: idx < session.sub_experiments.length - 1 ? '0.75em' : '0' }}>
-                              {formatDate(sub.date)}
+                  {programmingSessions.map((session) => {
+                    const subExperimentsCount = session.sub_experiments.length;
+                    return session.sub_experiments.map((sub, idx) => (
+                      <tr key={`${session.session_no}-${sub.label}`}>
+                        {/* S.NO - only show in first row, rowspan for all sub-experiments */}
+                        {idx === 0 && (
+                          <td 
+                            className="border border-black p-3 text-center align-top" 
+                            rowSpan={subExperimentsCount}
+                          >
+                            {session.session_no}
+                          </td>
+                        )}
+                        
+                        {/* DATE - individual cell for each sub-experiment */}
+                        <td className="border border-black p-3 text-center text-sm">
+                          {sub.date && formatDate(sub.date)}
+                        </td>
+                        
+                        {/* LIST OF EXPERIMENTS - individual cell for each sub-experiment */}
+                        <td className="border border-black p-3 text-sm">
+                          {sub.label}. {sub.title}
+                          {/* Show URL only in the last row */}
+                          {idx === subExperimentsCount - 1 && (
+                            <div className="text-xs mt-3 pt-2 border-t border-gray-300">
+                              <span className="text-gray-600">URL: </span>
+                              <a href={ensureHttpsPrefix(session.github_url)} className="text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer">
+                                {session.github_url}
+                              </a>
                             </div>
-                          )
-                        ))}
-                      </td>
-                      <td className="border border-black p-3 align-top text-sm">
-                        {session.sub_experiments.map((sub, idx) => (
-                          <div key={sub.label} style={{ marginBottom: idx < session.sub_experiments.length - 1 ? '0.75em' : '0' }}>
-                            {sub.label}. {sub.title}
-                          </div>
-                        ))}
-                        <div className="text-xs mt-3 pt-2 border-t border-gray-300">
-                          <span className="text-gray-600">URL: </span>
-                          <a href={ensureHttpsPrefix(session.github_url)} className="text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer">
-                            {session.github_url}
-                          </a>
-                        </div>
-                      </td>
-                      <td className="border border-black p-2 text-center align-middle">
-                        <div className="flex justify-center items-center h-full">
-                          <QRCode value={ensureHttpsPrefix(session.github_url)} size={64} />
-                        </div>
-                      </td>
-                      <td className="border border-black p-3 text-center align-top">{session.marks}</td>
-                      <td className="border border-black p-3 align-top"></td>
-                    </tr>
-                  ))}
+                          )}
+                        </td>
+                        
+                        {/* QR CODE - only show in first row, rowspan for all sub-experiments */}
+                        {idx === 0 && (
+                          <td 
+                            className="border border-black p-2 text-center align-middle" 
+                            rowSpan={subExperimentsCount}
+                          >
+                            <div className="flex justify-center items-center h-full">
+                              <QRCode value={ensureHttpsPrefix(session.github_url)} size={64} />
+                            </div>
+                          </td>
+                        )}
+                        
+                        {/* MARKS - only show in first row, rowspan for all sub-experiments */}
+                        {idx === 0 && (
+                          <td 
+                            className="border border-black p-3 text-center align-top" 
+                            rowSpan={subExperimentsCount}
+                          >
+                            {session.marks}
+                          </td>
+                        )}
+                        
+                        {/* SIGN - only show in first row, rowspan for all sub-experiments */}
+                        {idx === 0 && (
+                          <td 
+                            className="border border-black p-3 align-top" 
+                            rowSpan={subExperimentsCount}
+                          >
+                          </td>
+                        )}
+                      </tr>
+                    ));
+                  })}
                 </tbody>
               </table>
             </div>
