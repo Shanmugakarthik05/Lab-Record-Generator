@@ -50,7 +50,7 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
   };
 
   const isValid = experiments.length > 0 && experiments.every(exp => 
-    exp.date && exp.experiment_title && exp.github_url
+    exp.experiment_title && exp.github_url
   );
 
   return (
@@ -78,13 +78,12 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
 
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label htmlFor={`date-${index}`}>Date *</Label>
+                <Label htmlFor={`date-${index}`}>Date</Label>
                 <Input
                   id={`date-${index}`}
                   type="date"
                   value={exp.date}
                   onChange={(e) => updateExperiment(index, 'date', e.target.value)}
-                  required
                 />
               </div>
 

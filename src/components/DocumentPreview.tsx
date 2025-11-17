@@ -3,21 +3,49 @@ import QRCode from 'react-qr-code';
 import collegeHeader from 'figma:asset/b4febb2531b296d5e7d0e8087088780a9a2db377.png';
 import { formatDate } from '../utils/dateFormatter';
 import { ensureHttpsPrefix } from '../utils/urlFormatter';
+import { Button } from './ui/button';
+import { Edit } from 'lucide-react';
 
 interface DocumentPreviewProps {
   courseInfo: CourseInfo;
   theoryExperiments: TheoryExperiment[];
   programmingSessions: ProgrammingSession[];
+  onEditCourseInfo?: () => void;
+  onEditExperiments?: () => void;
 }
 
-export function DocumentPreview({ courseInfo, theoryExperiments, programmingSessions }: DocumentPreviewProps) {
+export function DocumentPreview({ courseInfo, theoryExperiments, programmingSessions, onEditCourseInfo, onEditExperiments }: DocumentPreviewProps) {
   const isTheory = courseInfo.record_type === 'Theory Record';
   const fontFamily = courseInfo.font_family || 'Times New Roman';
 
   return (
     <div className="mb-6">
-      <h2 className="mb-4 text-gray-800">Document Preview</h2>
-      <p className="mb-4 text-gray-600">Review your lab record before downloading</p>
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <h2 className="text-gray-800">Document Preview</h2>
+          <p className="text-gray-600">Review your lab record before printing</p>
+        </div>
+        <div className="flex gap-2 print:hidden">
+          <Button
+            onClick={onEditCourseInfo}
+            variant="outline"
+            size="sm"
+            className="border-blue-300 text-blue-700 hover:bg-blue-50"
+          >
+            <Edit className="w-4 h-4 mr-1" />
+            Edit Course Info
+          </Button>
+          <Button
+            onClick={onEditExperiments}
+            variant="outline"
+            size="sm"
+            className="border-purple-300 text-purple-700 hover:bg-purple-50"
+          >
+            <Edit className="w-4 h-4 mr-1" />
+            Edit Experiments
+          </Button>
+        </div>
+      </div>
       
       <div 
         id="document-preview" 

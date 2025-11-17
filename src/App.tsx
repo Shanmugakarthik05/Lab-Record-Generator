@@ -184,6 +184,8 @@ export default function App() {
                 courseInfo={courseInfo}
                 theoryExperiments={theoryExperiments}
                 programmingSessions={programmingSessions}
+                onEditCourseInfo={() => setStep(2)}
+                onEditExperiments={() => setStep(3)}
               />
               <DownloadButtons
                 courseInfo={courseInfo}
@@ -191,12 +193,6 @@ export default function App() {
                 programmingSessions={programmingSessions}
               />
               <div className="flex gap-4 justify-center mt-6">
-                <button
-                  onClick={handleBack}
-                  className="px-6 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                  Back
-                </button>
                 <button
                   onClick={handleReset}
                   className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"

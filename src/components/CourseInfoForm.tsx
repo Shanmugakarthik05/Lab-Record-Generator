@@ -94,77 +94,23 @@ export function CourseInfoForm({ initialData, onSubmit, onBack }: CourseInfoForm
         <div className="p-6 bg-gray-50 rounded-lg space-y-4">
           <h3 className="text-gray-700 mb-4">Optional Information</h3>
           
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="department">Department</Label>
-              <Input
-                id="department"
-                value={formData.department}
-                onChange={(e) => handleChange('department', e.target.value)}
-                placeholder="e.g., Computer Science"
-              />
-            </div>
-            
-            <div>
-              <Label htmlFor="semester">Semester</Label>
-              <Input
-                id="semester"
-                value={formData.semester}
-                onChange={(e) => handleChange('semester', e.target.value)}
-                placeholder="e.g., III"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="academic_year">Academic Year</Label>
-              <Input
-                id="academic_year"
-                value={formData.academic_year}
-                onChange={(e) => handleChange('academic_year', e.target.value)}
-                placeholder="e.g., 2024-2025"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="declaration_date">Declaration Date</Label>
-              <Input
-                id="declaration_date"
-                type="date"
-                value={formData.declaration_date}
-                onChange={(e) => handleChange('declaration_date', e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="college_name">College Name</Label>
-              <Input
-                id="college_name"
-                value={formData.college_name}
-                onChange={(e) => handleChange('college_name', e.target.value)}
-                placeholder="e.g., Anna University"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="font_family">Font Style</Label>
-              <Select
-                value={formData.font_family}
-                onValueChange={(value) => handleChange('font_family', value)}
-              >
-                <SelectTrigger id="font_family">
-                  <SelectValue placeholder="Select font" />
-                </SelectTrigger>
-                <SelectContent>
-                  {FONT_OPTIONS.map((font) => (
-                    <SelectItem key={font.value} value={font.value}>
-                      {font.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="font_family">Font Style</Label>
+            <Select
+              value={formData.font_family}
+              onValueChange={(value) => handleChange('font_family', value)}
+            >
+              <SelectTrigger id="font_family">
+                <SelectValue placeholder="Select font" />
+              </SelectTrigger>
+              <SelectContent>
+                {FONT_OPTIONS.map((font) => (
+                  <SelectItem key={font.value} value={font.value}>
+                    {font.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
         </div>
       </div>
