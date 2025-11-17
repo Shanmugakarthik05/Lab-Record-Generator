@@ -1,0 +1,156 @@
+import { CourseInfo, TheoryExperiment, ProgrammingSession } from '../App';
+import QRCode from 'react-qr-code';
+import collegeHeader from 'figma:asset/b4febb2531b296d5e7d0e8087088780a9a2db377.png';
+import { formatDate } from '../utils/dateFormatter';
+import { ensureHttpsPrefix } from '../utils/urlFormatter';
+
+interface DocumentPreviewProps {
+  courseInfo: CourseInfo;
+  theoryExperiments: TheoryExperiment[];
+  programmingSessions: ProgrammingSession[];
+}
+
+export function DocumentPreview({ courseInfo, theoryExperiments, programmingSessions }: DocumentPreviewProps) {
+  const isTheory = courseInfo.record_type === 'Theory Record';
+  const fontFamily = courseInfo.font_family || 'Times New Roman';
+
+  return (
+    <div className="mb-6">
+      <h2 className="mb-4 text-gray-800">Document Preview</h2>
+      <p className="mb-4 text-gray-600">Review your lab record before downloading</p>
+      
+      <div 
+        id="document-preview" 
+        className="bg-white border-2 border-gray-300 p-8 max-h-[600px] overflow-y-auto shadow-inner"
+        style={{ fontFamily }}
+      >
+        {/* Header with College Logo */}
+        <div className="mb-6 pb-4 border-b border-gray-300">
+          <div className="flex justify-center mb-4">
+            <img src={collegeHeader} alt="College Header" className="max-w-full h-auto" style={{ maxHeight: '80px' }} />
+          </div>
+        </div>
+
+        {/* Course Title */}
+        <div className="text-center mb-6">
+          <h2 className="mb-4">{courseInfo.course_code} - {courseInfo.course_title}</h2>
+          <h3 className="mb-2">TABLE OF CONTENTS</h3>
+        </div>
+
+        {/* Table of Contents - Theory */}
+        {isTheory && theoryExperiments.length > 0 && (
+          <div className="mb-8">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-black">
+                <thead>
+                  <tr className="bg-white">
+                    <th className="border border-black p-2 text-center">Exp.<br/>No</th>
+                    <th className="border border-black p-2 text-center">Date</th>
+                    <th className="border border-black p-2 text-center">Experiment Title</th>
+                    <th className="border border-black p-2 text-center">QR Code</th>
+                    <th className="border border-black p-2 text-center">Marks</th>
+                    <th className="border border-black p-2 text-center">Signature</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {theoryExperiments.map((exp) => (
+                    <tr key={exp.exp_no}>
+                      <td className="border border-black p-3 text-center align-top">{exp.exp_no}</td>
+                      <td className="border border-black p-3 text-center align-top">{formatDate(exp.date)}</td>
+                      <td className="border border-black p-3 align-top">
+                        <div className="mb-2">{exp.experiment_title}</div>
+                        <a href={ensureHttpsPrefix(exp.github_url)} className="text-xs text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer">
+                          {exp.github_url}
+                        </a>
+                      </td>
+                      <td className="border border-black p-2 text-center align-top">
+                        <div className="flex justify-center">
+                          <QRCode value={ensureHttpsPrefix(exp.github_url)} size={64} />
+                        </div>
+                      </td>
+                      <td className="border border-black p-3 text-center align-top">{exp.marks}</td>
+                      <td className="border border-black p-3 align-top"></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Table of Contents - Programming */}
+        {!isTheory && programmingSessions.length > 0 && (
+          <div className="mb-8">
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-black">
+                <thead>
+                  <tr className="bg-white">
+                    <th className="border border-black p-2 text-center text-sm">S.NO</th>
+                    <th className="border border-black p-2 text-center text-sm">DATE</th>
+                    <th className="border border-black p-2 text-center text-sm">LIST OF EXPERIMENTS</th>
+                    <th className="border border-black p-2 text-center text-sm">QR CODE</th>
+                    <th className="border border-black p-2 text-center text-sm">MARKS</th>
+                    <th className="border border-black p-2 text-center text-sm">SIGN</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {programmingSessions.map((session) => (
+                    <tr key={session.session_no}>
+                      <td className="border border-black p-3 text-center align-top">{session.session_no}</td>
+                      <td className="border border-black p-3 align-top text-sm">
+                        {session.sub_experiments.map((sub) => (
+                          sub.date && (
+                            <div key={sub.label} className="mb-1">{formatDate(sub.date)}</div>
+                          )
+                        ))}
+                      </td>
+                      <td className="border border-black p-3 align-top text-sm">
+                        <div className="space-y-1 mb-2">
+                          {session.sub_experiments.map((sub) => (
+                            <div key={sub.label}>
+                              {sub.label}. {sub.title}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="text-xs mt-2 pt-2 border-t border-gray-300">
+                          <span className="text-gray-600">URL: </span>
+                          <a href={ensureHttpsPrefix(session.github_url)} className="text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer">
+                            {session.github_url}
+                          </a>
+                        </div>
+                      </td>
+                      <td className="border border-black p-2 text-center align-top">
+                        <div className="flex justify-center">
+                          <QRCode value={ensureHttpsPrefix(session.github_url)} size={64} />
+                        </div>
+                      </td>
+                      <td className="border border-black p-3 text-center align-top">{session.marks}</td>
+                      <td className="border border-black p-3 align-top"></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        {/* Declaration */}
+        <div className="mt-8 pt-4">
+          <p className="mb-6">
+            I confirm that the experiments and GitHub links provided are entirely my own work.
+          </p>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <div>Name: {courseInfo.student_name}</div>
+              <div className="mt-2">Date:</div>
+            </div>
+            <div>
+              <div>Register Number: {courseInfo.register_number}</div>
+              <div className="mt-2">Learner Signature:</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
