@@ -169,7 +169,7 @@ function createTheoryTable(experiments: TheoryExperiment[], qrCodes: string[]): 
     })
   );
 
-  // Data rows
+  // Data rows - let Word handle page breaks naturally
   experiments.forEach((exp, index) => {
     rows.push(
       new TableRow({
@@ -187,7 +187,7 @@ function createTheoryTable(experiments: TheoryExperiment[], qrCodes: string[]): 
                   new TextRun({
                     text: ensureHttpsPrefix(exp.github_url),
                     size: 16,
-                    color: '000000',
+                    color: '0969da',
                   }),
                 ],
               }),
@@ -198,6 +198,7 @@ function createTheoryTable(experiments: TheoryExperiment[], qrCodes: string[]): 
           createDataCell(exp.marks, AlignmentType.CENTER),
           createDataCell('', AlignmentType.CENTER),
         ],
+        cantSplit: true, // Prevent row from breaking across pages
       })
     );
   });
@@ -229,7 +230,7 @@ function createProgrammingTable(sessions: ProgrammingSession[], qrCodes: string[
     })
   );
 
-  // Data rows
+  // Data rows - let Word handle page breaks naturally
   sessions.forEach((session, index) => {
     const experimentsParagraphs: Paragraph[] = [];
     
@@ -258,7 +259,7 @@ function createProgrammingTable(sessions: ProgrammingSession[], qrCodes: string[
           new TextRun({
             text: `URL: ${ensureHttpsPrefix(session.github_url)}`,
             size: 16,
-            color: '000000',
+            color: '0969da',
           }),
         ],
         spacing: { before: 100 },
@@ -289,6 +290,7 @@ function createProgrammingTable(sessions: ProgrammingSession[], qrCodes: string[
           createDataCell(session.marks, AlignmentType.CENTER),
           createDataCell('', AlignmentType.CENTER),
         ],
+        cantSplit: true, // Prevent row from breaking across pages
       })
     );
   });

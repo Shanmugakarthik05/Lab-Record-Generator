@@ -220,9 +220,22 @@ html {
     margin: 10mm;
   }
   
-  /* Prevent page breaks inside important elements */
-  table, tr, td {
+  /* Prevent page breaks inside table rows - let content flow naturally */
+  table {
+    page-break-inside: auto;
+  }
+  
+  tr {
     page-break-inside: avoid;
+    page-break-after: auto;
+  }
+  
+  thead {
+    display: table-header-group;
+  }
+  
+  tfoot {
+    display: table-footer-group;
   }
   
   /* Ensure QR codes and images print properly */

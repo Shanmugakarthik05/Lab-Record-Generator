@@ -28,12 +28,16 @@ function AlertDialogPortal({
   );
 }
 
-function AlertDialogOverlay({
-  className,
-  ...props
-}: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>) {
+function AlertDialogOverlay(
+  {
+    className,
+    ...props
+  }: React.ComponentProps<typeof AlertDialogPrimitive.Overlay>,
+  ref: React.ForwardedRef<React.ElementRef<typeof AlertDialogPrimitive.Overlay>>
+) {
   return (
     <AlertDialogPrimitive.Overlay
+      ref={ref}
       data-slot="alert-dialog-overlay"
       className={cn(
         "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-50 bg-black/50",
@@ -44,13 +48,15 @@ function AlertDialogOverlay({
   );
 }
 
+const AlertDialogOverlayForwarded = React.forwardRef(AlertDialogOverlay);
+
 function AlertDialogContent({
   className,
   ...props
 }: React.ComponentProps<typeof AlertDialogPrimitive.Content>) {
   return (
     <AlertDialogPortal>
-      <AlertDialogOverlay />
+      <AlertDialogOverlayForwarded />
       <AlertDialogPrimitive.Content
         data-slot="alert-dialog-content"
         className={cn(
@@ -145,7 +151,7 @@ function AlertDialogCancel({
 export {
   AlertDialog,
   AlertDialogPortal,
-  AlertDialogOverlay,
+  AlertDialogOverlayForwarded as AlertDialogOverlay,
   AlertDialogTrigger,
   AlertDialogContent,
   AlertDialogHeader,

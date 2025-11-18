@@ -1,6 +1,7 @@
 import { CourseInfo, TheoryExperiment, ProgrammingSession } from '../App';
 import { Button } from './ui/button';
-import { Printer } from 'lucide-react';
+import { Printer, FileText } from 'lucide-react';
+import { generateWordDocument } from '../utils/wordGenerator';
 
 interface DownloadButtonsProps {
   courseInfo: CourseInfo;
@@ -13,8 +14,24 @@ export function DownloadButtons({ courseInfo, theoryExperiments, programmingSess
     window.print();
   };
 
+  const handleDownloadWord = async () => {
+    try {
+      await generateWordDocument(courseInfo, theoryExperiments, programmingSessions);
+    } catch (error) {
+      console.error('Error generating Word document:', error);
+      alert('Failed to generate Word document. Please try again.');
+    }
+  };
+
   return (
     <div className="flex flex-col sm:flex-row gap-4 justify-center mb-6">
+      <Button
+        onClick={handleDownloadWord}
+        className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-6"
+      >
+        <FileText className="w-5 h-5 mr-2" />
+        Download as Word
+      </Button>
       <Button
         onClick={handlePrint}
         className="bg-green-600 hover:bg-green-700 text-white px-8 py-6"

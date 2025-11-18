@@ -81,15 +81,15 @@ export function DocumentPreview({ courseInfo, theoryExperiments, programmingSess
                   </tr>
                 </thead>
                 <tbody>
-                  {theoryExperiments.map((exp) => (
+                  {theoryExperiments.map((exp, index) => (
                     <tr key={exp.exp_no}>
                       <td className="border border-black p-3 text-center align-top">{exp.exp_no}</td>
                       <td className="border border-black p-3 text-center align-top">{formatDate(exp.date)}</td>
                       <td className="border border-black p-3 align-top">
                         <div className="mb-2">{exp.experiment_title}</div>
-                        <a href={ensureHttpsPrefix(exp.github_url)} className="text-xs text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer">
+                        <div className="text-xs text-blue-600 break-all">
                           {exp.github_url}
-                        </a>
+                        </div>
                       </td>
                       <td className="border border-black p-2 text-center align-middle">
                         <div className="flex justify-center items-center h-full">
@@ -122,7 +122,7 @@ export function DocumentPreview({ courseInfo, theoryExperiments, programmingSess
                   </tr>
                 </thead>
                 <tbody>
-                  {programmingSessions.map((session) => {
+                  {programmingSessions.map((session, sessionIndex) => {
                     const subExperimentsCount = session.sub_experiments.length;
                     return session.sub_experiments.map((sub, idx) => (
                       <tr key={`${session.session_no}-${sub.label}`}>
@@ -148,9 +148,9 @@ export function DocumentPreview({ courseInfo, theoryExperiments, programmingSess
                           {idx === subExperimentsCount - 1 && (
                             <div className="text-xs mt-3 pt-2 border-t border-gray-300">
                               <span className="text-gray-600">URL: </span>
-                              <a href={ensureHttpsPrefix(session.github_url)} className="text-blue-600 underline break-all" target="_blank" rel="noopener noreferrer">
+                              <div className="text-blue-600 break-all">
                                 {session.github_url}
-                              </a>
+                              </div>
                             </div>
                           )}
                         </td>
