@@ -1,3 +1,14 @@
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { supabase } from '../utils/supabase/client';
+import { RecordTypeSelector } from './RecordTypeSelector';
+import { CourseInfoForm } from './CourseInfoForm';
+import { TheoryExperimentsForm } from './TheoryExperimentsForm';
+import { ProgrammingSessionsForm } from './ProgrammingSessionsForm';
+import { DocumentPreview } from './DocumentPreview';
+import { DownloadButtons } from './DownloadButtons';
+import { History } from './History';
+import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut } from 'lucide-react';
 import { saveToHistory, getStudentInfo, saveStudentInfo, SavedRecord } from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -16,21 +27,18 @@ export function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'main' | 'history'>('main');
   const [step, setStep] = useState<number>(1);
-  const [courseInfo, setCourseInfo] = useState<CourseInfo>(() => {
-    const savedStudentInfo = user ? getStudentInfo(user.id) : null;
-    return {
-      record_type: '',
-      course_code: '',
-      course_title: '',
-      student_name: savedStudentInfo?.student_name || '',
-      register_number: savedStudentInfo?.register_number || '',
-      department: '',
-      semester: '',
-      academic_year: '',
-      college_name: '',
-      declaration_date: new Date().toLocaleDateString('en-GB'),
-      font_family: 'Times New Roman',
-    };
+  const [courseInfo, setCourseInfo] = useState<CourseInfo>({
+    record_type: '',
+    course_code: '',
+    course_title: '',
+    student_name: '',
+    register_number: '',
+    department: '',
+    semester: '',
+    academic_year: '',
+    college_name: '',
+    declaration_date: new Date().toLocaleDateString('en-GB'),
+    font_family: 'Times New Roman',
   });
   const [theoryExperiments, setTheoryExperiments] = useState<TheoryExperiment[]>([]);
   const [programmingSessions, setProgrammingSessions] = useState<ProgrammingSession[]>([]);
@@ -61,6 +69,20 @@ export function Dashboard() {
       navigate('/');
     }
   };
+
+  // Load student info when user is set
+  useEffect(() => {
+    if (user) {
+      const savedStudentInfo = getStudentInfo(user.id);
+      if (savedStudentInfo) {
+        setCourseInfo(prev => ({
+          ...prev,
+          student_name: savedStudentInfo.student_name,
+          register_number: savedStudentInfo.register_number,
+        }));
+      }
+    }
+  }, [user]);
 
   // Auto-save student info whenever name or register number changes
   useEffect(() => {
