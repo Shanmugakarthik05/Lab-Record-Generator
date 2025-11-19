@@ -1,8 +1,17 @@
 # Deployment Setup for Vercel
 
-## Important: Supabase Configuration for Production
+## ✅ Code Updated - Production URL Hardcoded!
 
-To ensure email confirmations redirect to your production site (`https://sec-record-generator.vercel.app/`) instead of localhost, you need to configure your Supabase project settings.
+The application code has been updated to **always redirect to production URL** (`https://sec-record-generator.vercel.app`), even when testing locally.
+
+All authentication redirects now use the hardcoded production URL:
+- Email confirmations → `https://sec-record-generator.vercel.app/dashboard`
+- Password resets → `https://sec-record-generator.vercel.app/dashboard`
+- Google OAuth → `https://sec-record-generator.vercel.app/dashboard`
+
+## Important: Supabase Configuration Required
+
+You still need to configure your Supabase project settings to allow these redirects.
 
 ### Steps to Configure Supabase for Production:
 

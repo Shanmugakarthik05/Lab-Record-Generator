@@ -8,6 +8,9 @@ import { Alert, AlertDescription } from './ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Lock, ShieldCheck, Mail, Eye, EyeOff, User, Sparkles, Copy, Check } from 'lucide-react';
 
+// Production URL for redirects
+const PRODUCTION_URL = 'https://sec-record-generator.vercel.app';
+
 export function LoginPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -202,7 +205,7 @@ export function LoginPage() {
             full_name: signupName,
             name: signupName,
           },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${PRODUCTION_URL}/dashboard`,
         },
       });
 
@@ -245,7 +248,7 @@ export function LoginPage() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${PRODUCTION_URL}/dashboard`,
         },
       });
 
@@ -274,7 +277,7 @@ export function LoginPage() {
       }
 
       const { data, error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${PRODUCTION_URL}/dashboard`,
       });
 
       if (error) {
