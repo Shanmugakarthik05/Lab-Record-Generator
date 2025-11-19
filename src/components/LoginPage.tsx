@@ -15,6 +15,11 @@ export function LoginPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const [passwordCopied, setPasswordCopied] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [activeField, setActiveField] = useState<'login' | 'signup' | 'reset' | null>(null);
   
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -25,6 +30,53 @@ export function LoginPage() {
   const [signupPassword, setSignupPassword] = useState('');
   const [signupConfirmPassword, setSignupConfirmPassword] = useState('');
   const [signupName, setSignupName] = useState('');
+
+  // Common email domains
+  const emailDomains = [
+    '@gmail.com',
+    '@saveetha.ac.in',
+    '@yahoo.com',
+    '@outlook.com',
+    '@hotmail.com',
+  ];
+
+  // Generate email suggestions based on input
+  const generateEmailSuggestions = (email: string) => {
+    if (!email || email.includes('@')) {
+      setShowSuggestions(false);
+      return;
+    }
+
+    const suggestions = emailDomains.map(domain => email + domain);
+    setEmailSuggestions(suggestions);
+    setShowSuggestions(true);
+  };
+
+  const handleEmailChange = (value: string, field: 'login' | 'signup' | 'reset') => {
+    setActiveField(field);
+    
+    if (field === 'login') {
+      setLoginEmail(value);
+    } else if (field === 'signup') {
+      setSignupEmail(value);
+    } else if (field === 'reset') {
+      setResetEmail(value);
+    }
+
+    generateEmailSuggestions(value);
+  };
+
+  const selectEmailSuggestion = (suggestion: string) => {
+    if (activeField === 'login') {
+      setLoginEmail(suggestion);
+    } else if (activeField === 'signup') {
+      setSignupEmail(suggestion);
+    } else if (activeField === 'reset') {
+      setResetEmail(suggestion);
+    }
+    
+    setShowSuggestions(false);
+  };
 
   // Generate a strong password
   const generateStrongPassword = () => {
@@ -89,9 +141,12 @@ export function LoginPage() {
       });
 
       if (error) {
-        // Handle email not confirmed error
+        // Handle specific error cases
         if (error.message.includes('Email not confirmed')) {
           throw new Error('Please verify your email address. Check your inbox for the confirmation link.');
+        }
+        if (error.message.includes('Invalid login credentials')) {
+          throw new Error('Invalid email or password. Please check your credentials and try again.');
         }
         throw error;
       }
@@ -102,6 +157,7 @@ export function LoginPage() {
     } catch (err: any) {
       console.error('Login error:', err);
       setError(err.message || 'Failed to sign in. Please check your credentials.');
+    } finally {
       setLoading(false);
     }
   };
@@ -186,7 +242,7 @@ export function LoginPage() {
       setError(null);
       setSuccess(null);
 
-      const { error } = await supabase.auth.signInWithOAuth({
+      const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: `${window.location.origin}/dashboard`,
@@ -196,9 +252,44 @@ export function LoginPage() {
       if (error) {
         throw error;
       }
+
+      if (data.user) {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       console.error('Google login error:', err);
       setError(err.message || 'Failed to sign in with Google. Please try again.');
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
+
+      if (!resetEmail) {
+        throw new Error('Please enter your email address');
+      }
+
+      const { data, error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
+        redirectTo: `${window.location.origin}/dashboard`,
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data) {
+        setSuccess('Password reset email sent! Please check your inbox.');
+        setShowForgotPassword(false);
+        setResetEmail('');
+      }
+    } catch (err: any) {
+      console.error('Forgot password error:', err);
+      setError(err.message || 'Failed to send password reset email. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
@@ -252,10 +343,23 @@ export function LoginPage() {
                     type="email"
                     placeholder="your.email@example.com"
                     value={loginEmail}
-                    onChange={(e) => setLoginEmail(e.target.value)}
+                    onChange={(e) => handleEmailChange(e.target.value, 'login')}
                     className="pl-10"
                     required
                   />
+                  {showSuggestions && (
+                    <div className="absolute left-0 right-0 bottom-0 transform translate-y-full bg-white border border-gray-300 rounded-b-md shadow-md z-10">
+                      {emailSuggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                          onClick={() => selectEmailSuggestion(suggestion)}
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -329,6 +433,74 @@ export function LoginPage() {
               </svg>
               Continue with Google
             </Button>
+
+            <div className="text-center mt-4">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-gray-500 hover:text-gray-700"
+              >
+                Forgot password?
+              </button>
+            </div>
+
+            {showForgotPassword && (
+              <div className="mt-4 p-4 border-2 border-blue-200 rounded-lg bg-blue-50">
+                <div className="space-y-3">
+                  <p className="text-sm text-blue-800 mb-2">
+                    Enter your email to receive a password reset link
+                  </p>
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-email">Email Address</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                      <Input
+                        id="reset-email"
+                        type="email"
+                        placeholder="your.email@example.com"
+                        value={resetEmail}
+                        onChange={(e) => handleEmailChange(e.target.value, 'reset')}
+                        className="pl-10"
+                      />
+                      {showSuggestions && (
+                        <div className="absolute left-0 right-0 bottom-0 transform translate-y-full bg-white border border-gray-300 rounded-b-md shadow-md z-10">
+                          {emailSuggestions.map((suggestion, index) => (
+                            <div
+                              key={index}
+                              className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                              onClick={() => selectEmailSuggestion(suggestion)}
+                            >
+                              {suggestion}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex gap-2">
+                    <Button
+                      type="button"
+                      onClick={handleForgotPassword}
+                      disabled={loading || !resetEmail}
+                      className="flex-1 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                    >
+                      {loading ? 'Sending...' : 'Send Reset Link'}
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setResetEmail('');
+                      }}
+                      variant="outline"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </TabsContent>
 
           {/* Signup Tab */}
@@ -359,10 +531,23 @@ export function LoginPage() {
                     type="email"
                     placeholder="your.email@example.com"
                     value={signupEmail}
-                    onChange={(e) => setSignupEmail(e.target.value)}
+                    onChange={(e) => handleEmailChange(e.target.value, 'signup')}
                     className="pl-10"
                     required
                   />
+                  {showSuggestions && (
+                    <div className="absolute left-0 right-0 bottom-0 transform translate-y-full bg-white border border-gray-300 rounded-b-md shadow-md z-10">
+                      {emailSuggestions.map((suggestion, index) => (
+                        <div
+                          key={index}
+                          className="px-3 py-2 cursor-pointer hover:bg-gray-100"
+                          onClick={() => selectEmailSuggestion(suggestion)}
+                        >
+                          {suggestion}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
 

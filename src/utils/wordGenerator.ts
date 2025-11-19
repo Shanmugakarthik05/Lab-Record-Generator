@@ -188,6 +188,10 @@ function createTheoryTable(experiments: TheoryExperiment[], qrCodes: string[]): 
                     text: ensureHttpsPrefix(exp.github_url),
                     size: 16,
                     color: '0969da',
+                    underline: {
+                      type: 'single',
+                      color: '0969da',
+                    },
                   }),
                 ],
               }),
@@ -260,6 +264,10 @@ function createProgrammingTable(sessions: ProgrammingSession[], qrCodes: string[
             text: `URL: ${ensureHttpsPrefix(session.github_url)}`,
             size: 16,
             color: '0969da',
+            underline: {
+              type: 'single',
+              color: '0969da',
+            },
           }),
         ],
         spacing: { before: 100 },

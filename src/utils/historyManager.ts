@@ -50,11 +50,18 @@ export function saveToHistory(
       r.status === 'draft'
   );
   
-  if (existingDraftIndex !== -1 && status === 'draft') {
+  if (status === 'complete') {
+    // If saving as complete, remove any existing draft for this course
+    if (existingDraftIndex !== -1) {
+      history.splice(existingDraftIndex, 1);
+    }
+    // Add new completed record
+    history.unshift(record);
+  } else if (existingDraftIndex !== -1) {
     // Update existing draft
     history[existingDraftIndex] = { ...record, id: history[existingDraftIndex].id };
   } else {
-    // Add new record
+    // Add new draft record
     history.unshift(record);
   }
   

@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { getDraftRecords, getCompletedRecords, deleteFromHistory, SavedRecord } from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Trash2, FileText, Clock, CheckCircle, Calendar, Search, Folder, FolderOpen } from 'lucide-react';
+import { Trash2, FileText, Clock, CheckCircle, Calendar, Search, Folder, FolderOpen, Undo2 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
+import { toast } from 'sonner@2.0.3';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,8 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
   const [completedRecords, setCompletedRecords] = useState<SavedRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
+  const deletionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadHistory = () => {
     setDraftRecords(getDraftRecords(userId)); // Pass userId
@@ -36,10 +39,58 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
     loadHistory();
   }, [userId]); // Add userId to dependencies
 
+  // Cleanup timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (deletionTimeoutRef.current) {
+        clearTimeout(deletionTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const handleDelete = (id: string) => {
-    deleteFromHistory(id);
-    loadHistory();
+    // Set pending deletion state to hide the record from UI
+    setPendingDeletion(id);
     setDeleteId(null);
+
+    // Clear any existing timeout
+    if (deletionTimeoutRef.current) {
+      clearTimeout(deletionTimeoutRef.current);
+    }
+
+    // Show toast with undo button
+    toast.error('Record deleted', {
+      description: 'You have 10 seconds to undo this action',
+      duration: 10000,
+      action: {
+        label: 'Undo',
+        onClick: () => handleUndo(id),
+      },
+    });
+
+    // Set timeout to actually delete after 10 seconds
+    deletionTimeoutRef.current = setTimeout(() => {
+      deleteFromHistory(id);
+      setPendingDeletion(null);
+      loadHistory();
+      toast.success('Record permanently deleted');
+    }, 10000);
+  };
+
+  const handleUndo = (id: string) => {
+    // Clear the timeout
+    if (deletionTimeoutRef.current) {
+      clearTimeout(deletionTimeoutRef.current);
+      deletionTimeoutRef.current = null;
+    }
+
+    // Restore the record
+    setPendingDeletion(null);
+    loadHistory();
+    
+    toast.success('Deletion cancelled', {
+      description: 'Record has been restored',
+    });
   };
 
   const handleLoad = (record: SavedRecord) => {
@@ -59,15 +110,19 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
   };
 
   const filterRecords = (records: SavedRecord[]) => {
-    if (!searchQuery.trim()) return records;
+    if (!searchQuery.trim()) {
+      // Filter out pending deletion records
+      return records.filter(record => record.id !== pendingDeletion);
+    }
     
     const query = searchQuery.toLowerCase();
     return records.filter(record => 
-      record.courseInfo.course_code.toLowerCase().includes(query) ||
+      record.id !== pendingDeletion && // Filter out pending deletion
+      (record.courseInfo.course_code.toLowerCase().includes(query) ||
       record.courseInfo.course_title.toLowerCase().includes(query) ||
       record.courseInfo.student_name.toLowerCase().includes(query) ||
       record.courseInfo.register_number.toLowerCase().includes(query) ||
-      record.courseInfo.department.toLowerCase().includes(query)
+      record.courseInfo.department.toLowerCase().includes(query))
     );
   };
 
@@ -230,7 +285,7 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Record</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete this record? This action cannot be undone.
+              Are you sure you want to delete this record? You'll have 10 seconds to undo this action.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

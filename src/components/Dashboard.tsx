@@ -12,6 +12,8 @@ import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut } fr
 import { saveToHistory, getStudentInfo, saveStudentInfo, SavedRecord } from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
+import { Toaster } from './ui/sonner';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -215,7 +217,11 @@ export function Dashboard() {
       'complete',
       user.id // Pass user ID
     );
-    alert('Record marked as complete and saved successfully!');
+    toast.success('✅ Record saved as complete! Starting new record...');
+    // Reset and start a new record after a short delay
+    setTimeout(() => {
+      handleReset();
+    }, 1000);
   };
 
   if (!user) {
@@ -417,6 +423,7 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+      <Toaster />
     </div>
   );
 }

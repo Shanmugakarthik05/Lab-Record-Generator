@@ -274,6 +274,13 @@ html {
     -webkit-print-color-adjust: exact;
   }
   
+  /* Ensure link colors are preserved */
+  a[href] {
+    color: #0969da !important;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+  
   /* Hide scrollbars */
   ::-webkit-scrollbar {
     display: none;
