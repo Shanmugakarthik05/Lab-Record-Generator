@@ -3,6 +3,7 @@ import { GoogleUser, saveAuthUser } from '../utils/auth';
 import { Button } from './ui/button';
 import { Alert, AlertDescription } from './ui/alert';
 import { Loader2, Lock, ShieldCheck } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface GoogleLoginProps {
   onLoginSuccess: (user: GoogleUser) => void;
@@ -27,6 +28,7 @@ export function GoogleLogin({ onLoginSuccess }: GoogleLoginProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState(false);
+  const navigate = useNavigate()
 
   // Google Client ID - Replace with your own Client ID from Google Cloud Console
   const GOOGLE_CLIENT_ID = '462714228165-te0mfo17tbukmvul6qg1ikjpnmj9u71a.apps.googleusercontent.com';
@@ -98,15 +100,29 @@ export function GoogleLogin({ onLoginSuccess }: GoogleLoginProps) {
     }
   };
 
-  const handleGoogleLogin = () => {
-    setLoading(true);
-    setError(null);
+  const handleGoogleLogin = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      setSuccess(null);
 
-    if (window.google) {
-      // Trigger Google One Tap or redirect to Google Sign-In
-      window.google.accounts.id.prompt();
-    } else {
-      setError('Google Sign-In is not loaded. Please refresh the page.');
+      const redirectTo = `${window.location.origin}/dashboard`;
+
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo },
+      });
+
+      if (error) throw error;
+
+      // usually with OAuth this won't return user immediately (redirect)
+      if (data?.user) {
+        navigate('/dashboard');
+      }
+    } catch (err: any) {
+      console.error('Google login error:', err);
+      setError(err.message || 'Failed to sign in with Google. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
