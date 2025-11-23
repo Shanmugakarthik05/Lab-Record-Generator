@@ -246,7 +246,7 @@ function createProgrammingTable(sessions: ProgrammingSession[], qrCodes: string[
               text: `${sub.label}. ${sub.title}`,
             }),
           ],
-          spacing: { after: 100 },
+          spacing: { after: 200 }, // Increased spacing for visible line break
         })
       );
       
@@ -274,7 +274,7 @@ function createProgrammingTable(sessions: ProgrammingSession[], qrCodes: string[
             },
           }),
         ],
-        spacing: { before: 150 },
+        spacing: { before: 200 }, // Increased spacing before URL
       })
     );
 

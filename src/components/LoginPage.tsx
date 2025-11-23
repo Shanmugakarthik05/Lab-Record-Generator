@@ -9,10 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { Lock, ShieldCheck, Mail, Eye, EyeOff, User, Sparkles, Copy, Check } from 'lucide-react';
 
 // Production URL for redirects
-const PRODUCTION_URL = typeof window !== 'undefined'
-  ? window.location.origin
-  : 'https://sec-record-generator.vercel.app';
-
+const PRODUCTION_URL = 'https://sec-record-generator.vercel.app';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -26,11 +23,11 @@ export function LoginPage() {
   const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeField, setActiveField] = useState<'login' | 'signup' | 'reset' | null>(null);
-
+  
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
-
+  
   // Signup form state
   const [signupEmail, setSignupEmail] = useState('');
   const [signupPassword, setSignupPassword] = useState('');
@@ -60,7 +57,7 @@ export function LoginPage() {
 
   const handleEmailChange = (value: string, field: 'login' | 'signup' | 'reset') => {
     setActiveField(field);
-
+    
     if (field === 'login') {
       setLoginEmail(value);
     } else if (field === 'signup') {
@@ -80,7 +77,7 @@ export function LoginPage() {
     } else if (activeField === 'reset') {
       setResetEmail(suggestion);
     }
-
+    
     setShowSuggestions(false);
   };
 
@@ -90,22 +87,22 @@ export function LoginPage() {
     const uppercase = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
     const numbers = '0123456789';
     const specialChars = '!@#$%^&*()_+-=[]{}|;:,.<>?';
-
+    
     // Ensure at least one of each required character type
     let password = '';
     password += lowercase[Math.floor(Math.random() * lowercase.length)];
     password += uppercase[Math.floor(Math.random() * uppercase.length)];
     password += numbers[Math.floor(Math.random() * numbers.length)];
     password += specialChars[Math.floor(Math.random() * specialChars.length)];
-
+    
     // Fill the rest randomly (total length: 12-16 characters)
     const allChars = lowercase + uppercase + numbers + specialChars;
     const remainingLength = 8 + Math.floor(Math.random() * 5); // 8-12 more chars
-
+    
     for (let i = 0; i < remainingLength; i++) {
       password += allChars[Math.floor(Math.random() * allChars.length)];
     }
-
+    
     // Shuffle the password
     return password.split('').sort(() => Math.random() - 0.5).join('');
   };
@@ -116,7 +113,7 @@ export function LoginPage() {
     setSignupConfirmPassword(suggestedPassword);
     setShowPassword(true);
     setSuccess('Strong password generated! You can copy it or modify it as needed.');
-
+    
     // Auto-hide success message after 5 seconds
     setTimeout(() => setSuccess(null), 5000);
   };
@@ -131,7 +128,7 @@ export function LoginPage() {
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     try {
       setLoading(true);
       setError(null);
@@ -170,7 +167,7 @@ export function LoginPage() {
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
-
+    
     try {
       setLoading(true);
       setError(null);
@@ -208,7 +205,7 @@ export function LoginPage() {
             full_name: signupName,
             name: signupName,
           },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
+          emailRedirectTo: `${PRODUCTION_URL}/dashboard`,
         },
       });
 
@@ -251,7 +248,7 @@ export function LoginPage() {
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/dashboard`,
+          redirectTo: `${PRODUCTION_URL}/dashboard`,
         },
       });
 
@@ -280,7 +277,7 @@ export function LoginPage() {
       }
 
       const { data, error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/dashboard`,
+        redirectTo: `${PRODUCTION_URL}/dashboard`,
       });
 
       if (error) {

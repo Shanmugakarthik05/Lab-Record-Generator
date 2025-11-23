@@ -97,15 +97,15 @@ export function Dashboard() {
     }
   }, [user, courseInfo.student_name, courseInfo.register_number]);
 
-  // Auto-save draft whenever data changes (after step 2, but NOT on step 4)
+  // Auto-save draft whenever data changes (after step 2)
   useEffect(() => {
-    if (user && step >= 2 && step < 4 && courseInfo.course_code && courseInfo.course_title) {
+    if (user && step >= 2 && courseInfo.course_code && courseInfo.course_title) {
       const timer = setTimeout(() => {
         saveToHistory(
           courseInfo,
           theoryExperiments,
           programmingSessions,
-          'draft', // Auto-save as draft only during form filling
+          'draft', // Always auto-save as draft
           user.id // Pass user ID
         );
       }, 1000);
@@ -114,29 +114,29 @@ export function Dashboard() {
     }
   }, [user, courseInfo, theoryExperiments, programmingSessions, step]);
 
-  // Save on page unload or network reconnect (only if not on final step)
+  // Save on page unload or network reconnect
   useEffect(() => {
     if (!user) return;
 
     const handleBeforeUnload = () => {
-      if (step < 4 && courseInfo.course_code && courseInfo.course_title) {
+      if (courseInfo.course_code && courseInfo.course_title) {
         saveToHistory(
           courseInfo,
           theoryExperiments,
           programmingSessions,
-          'draft', // Auto-save as draft during form filling
+          'draft', // Always auto-save as draft
           user.id // Pass user ID
         );
       }
     };
 
     const handleOnline = () => {
-      if (step < 4 && courseInfo.course_code && courseInfo.course_title) {
+      if (courseInfo.course_code && courseInfo.course_title) {
         saveToHistory(
           courseInfo,
           theoryExperiments,
           programmingSessions,
-          'draft', // Auto-save as draft during form filling
+          'draft', // Always auto-save as draft
           user.id // Pass user ID
         );
       }
@@ -393,6 +393,11 @@ export function Dashboard() {
                       Save as Complete
                     </button>
                   </div>
+                  
+                  {/* Auto-save indicator */}
+                  <p className="text-center text-sm text-gray-500 mt-4">
+                    ✓ Auto-saved as draft
+                  </p>
                 </div>
               )}
             </div>

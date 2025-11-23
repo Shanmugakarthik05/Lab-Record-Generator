@@ -216,7 +216,7 @@ export function DocumentPreview({ courseInfo, theoryExperiments, programmingSess
             </div>
             <div>
               <div>Register Number: {courseInfo.register_number}</div>
-              <div className="mt-2">Learner Signature: ___________________________</div>
+              <div className="mt-2">Learner Signature: </div>
             </div>
           </div>
         </div>
