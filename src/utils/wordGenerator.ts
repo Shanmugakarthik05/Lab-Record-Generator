@@ -238,23 +238,27 @@ function createProgrammingTable(sessions: ProgrammingSession[], qrCodes: string[
   sessions.forEach((session, index) => {
     const experimentsParagraphs: Paragraph[] = [];
     
-    session.sub_experiments.forEach((sub) => {
+    session.sub_experiments.forEach((sub, subIndex) => {
       experimentsParagraphs.push(
         new Paragraph({
           children: [
             new TextRun({
               text: `${sub.label}. ${sub.title}`,
             }),
-            ...(sub.date ? [
-              new TextRun({
-                text: ` (${formatDate(sub.date)})`,
-                color: '666666',
-              }),
-            ] : []),
           ],
-          spacing: { after: 50 },
+          spacing: { after: 100 },
         })
       );
+      
+      // Add a blank line between sub-experiments (but not after the last one)
+      if (subIndex < session.sub_experiments.length - 1) {
+        experimentsParagraphs.push(
+          new Paragraph({
+            text: '',
+            spacing: { after: 50 },
+          })
+        );
+      }
     });
 
     experimentsParagraphs.push(
@@ -270,7 +274,7 @@ function createProgrammingTable(sessions: ProgrammingSession[], qrCodes: string[
             },
           }),
         ],
-        spacing: { before: 100 },
+        spacing: { before: 150 },
       })
     );
 

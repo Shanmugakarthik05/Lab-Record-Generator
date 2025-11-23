@@ -71,7 +71,7 @@ export async function generatePDFDocument(
   yPos += 7;
   doc.text(`Register Number: ${courseInfo.register_number}`, 20, yPos);
   yPos += 7;
-  doc.text('Learner Signature: ______________________________', 20, yPos);
+  doc.text('Learner Signature: _____________________________________________', 20, yPos);
 
   const fileName = isTheory 
     ? `Theory_Record_${courseInfo.course_code}_${courseInfo.register_number}.pdf`

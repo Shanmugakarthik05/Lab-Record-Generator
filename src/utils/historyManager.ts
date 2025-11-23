@@ -55,8 +55,23 @@ export function saveToHistory(
     if (existingDraftIndex !== -1) {
       history.splice(existingDraftIndex, 1);
     }
-    // Add new completed record
-    history.unshift(record);
+    
+    // Check if there's already a completed record for this course by this user
+    const existingCompleteIndex = history.findIndex(
+      (r) => 
+        r.userId === userId && // Check user ID
+        r.courseInfo.course_code === courseInfo.course_code &&
+        r.courseInfo.course_title === courseInfo.course_title &&
+        r.status === 'complete'
+    );
+    
+    if (existingCompleteIndex !== -1) {
+      // Replace the existing completed record with the new one
+      history[existingCompleteIndex] = record;
+    } else {
+      // Add new completed record
+      history.unshift(record);
+    }
   } else if (existingDraftIndex !== -1) {
     // Update existing draft
     history[existingDraftIndex] = { ...record, id: history[existingDraftIndex].id };

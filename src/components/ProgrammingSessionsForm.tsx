@@ -4,12 +4,23 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface ProgrammingSessionsFormProps {
   initialData: ProgrammingSession[];
   onSubmit: (sessions: ProgrammingSession[]) => void;
   onBack: () => void;
 }
+
+const isValidURL = (url: string): boolean => {
+  if (!url || url.trim() === '') return false;
+  try {
+    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
 
 export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: ProgrammingSessionsFormProps) {
   const createEmptySession = (sessionNo: number): ProgrammingSession => ({
@@ -43,6 +54,14 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
   const updateSession = (index: number, field: keyof ProgrammingSession, value: string) => {
     const updated = [...sessions];
     updated[index] = { ...updated[index], [field]: value };
+    
+    // Validate URL when github_url field is updated
+    if (field === 'github_url' && value) {
+      if (!isValidURL(value)) {
+        toast.error('Please enter valid URL only');
+      }
+    }
+    
     setSessions(updated);
   };
 
@@ -81,7 +100,7 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
   };
 
   const isValid = sessions.length > 0 && sessions.every(session => 
-    session.github_url && session.sub_experiments.length > 0 && session.sub_experiments.every(sub => sub.title)
+    isValidURL(session.github_url) && session.sub_experiments.length > 0 && session.sub_experiments.every(sub => sub.title)
   );
 
   return (

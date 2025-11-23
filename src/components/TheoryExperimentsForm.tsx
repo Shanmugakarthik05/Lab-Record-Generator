@@ -4,12 +4,23 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
 import { Plus, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface TheoryExperimentsFormProps {
   initialData: TheoryExperiment[];
   onSubmit: (experiments: TheoryExperiment[]) => void;
   onBack: () => void;
 }
+
+const isValidURL = (url: string): boolean => {
+  if (!url || url.trim() === '') return false;
+  try {
+    const urlObj = new URL(url.startsWith('http') ? url : `https://${url}`);
+    return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
 
 export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryExperimentsFormProps) {
   const [experiments, setExperiments] = useState<TheoryExperiment[]>(
@@ -39,6 +50,14 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
   const updateExperiment = (index: number, field: keyof TheoryExperiment, value: string | number) => {
     const updated = [...experiments];
     updated[index] = { ...updated[index], [field]: value };
+    
+    // Validate URL when github_url field is updated
+    if (field === 'github_url' && value && typeof value === 'string') {
+      if (!isValidURL(value)) {
+        toast.error('Please enter valid URL only');
+      }
+    }
+    
     setExperiments(updated);
   };
 
@@ -48,7 +67,7 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
   };
 
   const isValid = experiments.length > 0 && experiments.every(exp => 
-    exp.exp_no && exp.experiment_title && exp.github_url
+    exp.exp_no && exp.experiment_title && isValidURL(exp.github_url)
   );
 
   return (
