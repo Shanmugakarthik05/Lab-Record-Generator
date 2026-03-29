@@ -3,7 +3,7 @@ import { TheoryExperiment } from '../App';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, ArrowUp, ArrowDown, GripVertical, Copy, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface TheoryExperimentsFormProps {
@@ -28,6 +28,7 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
       { exp_no: '1', date: '', experiment_title: '', github_url: '', marks: '' }
     ]
   );
+  const [copiedDate, setCopiedDate] = useState<string>('');
 
   const addExperiment = () => {
     setExperiments([
@@ -45,6 +46,22 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
   const removeExperiment = (index: number) => {
     const updated = experiments.filter((_, i) => i !== index);
     setExperiments(updated);
+  };
+
+  const moveExperimentUp = (index: number) => {
+    if (index === 0) return;
+    const updated = [...experiments];
+    [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
+    setExperiments(updated);
+    toast.success('Experiment moved up');
+  };
+
+  const moveExperimentDown = (index: number) => {
+    if (index === experiments.length - 1) return;
+    const updated = [...experiments];
+    [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+    setExperiments(updated);
+    toast.success('Experiment moved down');
   };
 
   const updateExperiment = (index: number, field: keyof TheoryExperiment, value: string | number) => {
@@ -70,6 +87,20 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
     exp.exp_no && exp.experiment_title && isValidURL(exp.github_url)
   );
 
+  const copyDate = (date: string) => {
+    setCopiedDate(date);
+    toast.success('Date copied!');
+  };
+
+  const pasteDate = (index: number) => {
+    if (copiedDate) {
+      updateExperiment(index, 'date', copiedDate);
+      toast.success('Date pasted!');
+    } else {
+      toast.error('No date copied yet');
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
       <h2 className="mb-6 text-gray-800">Theory Record Experiments</h2>
@@ -79,7 +110,32 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
         {experiments.map((exp, index) => (
           <div key={index} className="p-6 bg-gray-50 rounded-lg border-2 border-gray-200 relative">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-gray-700">Experiment {exp.exp_no}</h3>
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => moveExperimentUp(index)}
+                    disabled={index === 0}
+                    className="h-6 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-30"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => moveExperimentDown(index)}
+                    disabled={index === experiments.length - 1}
+                    className="h-6 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-30"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </Button>
+                </div>
+                <GripVertical className="w-5 h-5 text-gray-400" />
+                <h3 className="text-gray-700">Experiment {exp.exp_no}</h3>
+              </div>
               {experiments.length > 1 && (
                 <Button
                   type="button"
@@ -107,12 +163,37 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
 
               <div>
                 <Label htmlFor={`date-${index}`}>Date</Label>
-                <Input
-                  id={`date-${index}`}
-                  type="date"
-                  value={exp.date}
-                  onChange={(e) => updateExperiment(index, 'date', e.target.value)}
-                />
+                <div className="flex gap-1">
+                  <Input
+                    id={`date-${index}`}
+                    type="date"
+                    value={exp.date}
+                    onChange={(e) => updateExperiment(index, 'date', e.target.value)}
+                    className="flex-1"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => copyDate(exp.date)}
+                    disabled={!exp.date}
+                    className="px-2"
+                    title="Copy date"
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => pasteDate(index)}
+                    disabled={!copiedDate}
+                    className="px-2"
+                    title="Paste date"
+                  >
+                    <ClipboardPaste className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
 
               <div>

@@ -3,7 +3,7 @@ import { ProgrammingSession, SubExperiment } from '../App';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { Plus, Trash2 } from 'lucide-react';
+import { Plus, Trash2, ArrowUp, ArrowDown, GripVertical, Copy, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface ProgrammingSessionsFormProps {
@@ -40,6 +40,7 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
   const [sessions, setSessions] = useState<ProgrammingSession[]>(
     initialData.length > 0 ? initialData : [createEmptySession(1)]
   );
+  const [copiedDate, setCopiedDate] = useState<string>('');
 
   const addSession = () => {
     setSessions([...sessions, createEmptySession(sessions.length + 1)]);
@@ -49,6 +50,26 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
     const updated = sessions.filter((_, i) => i !== index);
     const renumbered = updated.map((session, i) => ({ ...session, session_no: i + 1 }));
     setSessions(renumbered);
+  };
+
+  const moveSessionUp = (index: number) => {
+    if (index === 0) return;
+    const updated = [...sessions];
+    [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
+    // Renumber sessions after moving
+    const renumbered = updated.map((session, i) => ({ ...session, session_no: i + 1 }));
+    setSessions(renumbered);
+    toast.success('Session moved up');
+  };
+
+  const moveSessionDown = (index: number) => {
+    if (index === sessions.length - 1) return;
+    const updated = [...sessions];
+    [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
+    // Renumber sessions after moving
+    const renumbered = updated.map((session, i) => ({ ...session, session_no: i + 1 }));
+    setSessions(renumbered);
+    toast.success('Session moved down');
   };
 
   const updateSession = (index: number, field: keyof ProgrammingSession, value: string) => {
@@ -103,6 +124,20 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
     isValidURL(session.github_url) && session.sub_experiments.length > 0 && session.sub_experiments.every(sub => sub.title)
   );
 
+  const copyDate = (date: string) => {
+    setCopiedDate(date);
+    toast.success('Date copied!');
+  };
+
+  const pasteDate = (sessionIndex: number, subIndex: number) => {
+    if (copiedDate) {
+      updateSubExperiment(sessionIndex, subIndex, 'date', copiedDate);
+      toast.success('Date pasted!');
+    } else {
+      toast.error('No date copied yet');
+    }
+  };
+
   return (
     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto">
       <h2 className="mb-6 text-gray-800">Programming Record Sessions</h2>
@@ -112,7 +147,32 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
         {sessions.map((session, sessionIndex) => (
           <div key={sessionIndex} className="p-6 bg-purple-50 rounded-lg border-2 border-purple-200">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-purple-900">Session {session.session_no}</h3>
+              <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => moveSessionUp(sessionIndex)}
+                    disabled={sessionIndex === 0}
+                    className="h-6 px-2 text-purple-600 hover:text-purple-700 hover:bg-purple-100 disabled:opacity-30"
+                  >
+                    <ArrowUp className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => moveSessionDown(sessionIndex)}
+                    disabled={sessionIndex === sessions.length - 1}
+                    className="h-6 px-2 text-purple-600 hover:text-purple-700 hover:bg-purple-100 disabled:opacity-30"
+                  >
+                    <ArrowDown className="w-4 h-4" />
+                  </Button>
+                </div>
+                <GripVertical className="w-5 h-5 text-purple-400" />
+                <h3 className="text-purple-900">Session {session.session_no}</h3>
+              </div>
               {sessions.length > 1 && (
                 <Button
                   type="button"
@@ -170,17 +230,41 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
                       <span>{subExp.label}</span>
                     </div>
                   </div>
-                  <div className="md:col-span-3">
+                  <div className="md:col-span-4">
                     <Label htmlFor={`sub-date-${sessionIndex}-${subIndex}`} className="text-xs">Date</Label>
-                    <Input
-                      id={`sub-date-${sessionIndex}-${subIndex}`}
-                      type="date"
-                      value={subExp.date}
-                      onChange={(e) => updateSubExperiment(sessionIndex, subIndex, 'date', e.target.value)}
-                      className="h-10"
-                    />
+                    <div className="flex gap-1">
+                      <Input
+                        id={`sub-date-${sessionIndex}-${subIndex}`}
+                        type="date"
+                        value={subExp.date}
+                        onChange={(e) => updateSubExperiment(sessionIndex, subIndex, 'date', e.target.value)}
+                        className="h-10 flex-1"
+                      />
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyDate(subExp.date)}
+                        disabled={!subExp.date}
+                        className="px-2 h-10"
+                        title="Copy date"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => pasteDate(sessionIndex, subIndex)}
+                        disabled={!copiedDate}
+                        className="px-2 h-10"
+                        title="Paste date"
+                      >
+                        <ClipboardPaste className="w-3 h-3" />
+                      </Button>
+                    </div>
                   </div>
-                  <div className="md:col-span-7">
+                  <div className="md:col-span-6">
                     <Label htmlFor={`sub-title-${sessionIndex}-${subIndex}`} className="text-xs">Title *</Label>
                     <Input
                       id={`sub-title-${sessionIndex}-${subIndex}`}

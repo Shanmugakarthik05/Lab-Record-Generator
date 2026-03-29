@@ -126,7 +126,7 @@ async function createTheoryTable(doc: jsPDF, experiments: TheoryExperiment[], qr
     },
     columnStyles: {
       0: { halign: 'center', cellWidth: 12 },
-      1: { halign: 'center', cellWidth: 18 },
+      1: { halign: 'center', cellWidth: 25 }, // Increased from 18 to 25
       2: { cellWidth: 'auto' },
       3: { halign: 'center', cellWidth: 25 },
       4: { halign: 'center', cellWidth: 12 },
@@ -192,7 +192,7 @@ async function createProgrammingTable(doc: jsPDF, sessions: ProgrammingSession[]
     },
     columnStyles: {
       0: { halign: 'center', cellWidth: 10 },
-      1: { halign: 'center', cellWidth: 18 },
+      1: { halign: 'center', cellWidth: 25 }, // Increased from 18 to 25
       2: { cellWidth: 'auto' },
       3: { halign: 'center', cellWidth: 22 },
       4: { halign: 'center', cellWidth: 12 },

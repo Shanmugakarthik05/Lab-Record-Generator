@@ -8,6 +8,8 @@ export interface SavedRecord {
   programmingSessions: ProgrammingSession[];
   savedAt: string;
   status: 'draft' | 'complete';
+  isShared?: boolean; // Add flag to mark if record is shared
+  sharedBy?: string; // Store the name of user who shared it
 }
 
 export interface StudentInfo {
@@ -142,4 +144,40 @@ export function getStudentInfo(userId: string): StudentInfo | null {
 
 export function clearStudentInfo(): void {
   localStorage.removeItem(STUDENT_INFO_KEY);
+}
+
+// Get all shared/public records (excluding the current user's records)
+export function getSharedRecords(currentUserId: string): SavedRecord[] {
+  return getHistory().filter(
+    record => 
+      record.status === 'complete' && 
+      record.isShared === true && 
+      record.userId !== currentUserId
+  );
+}
+
+// Toggle share status of a record
+export function toggleShareRecord(recordId: string, userName: string): boolean {
+  const history = getHistory();
+  const recordIndex = history.findIndex(r => r.id === recordId);
+  
+  if (recordIndex === -1) return false;
+  
+  const record = history[recordIndex];
+  
+  // Toggle share status
+  history[recordIndex] = {
+    ...record,
+    isShared: !record.isShared,
+    sharedBy: !record.isShared ? userName : undefined,
+  };
+  
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+  return history[recordIndex].isShared || false;
+}
+
+// Check if a record is shared
+export function isRecordShared(recordId: string): boolean {
+  const record = getRecordById(recordId);
+  return record?.isShared === true;
 }

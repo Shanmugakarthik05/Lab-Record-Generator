@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { getDraftRecords, getCompletedRecords, deleteFromHistory, SavedRecord } from '../utils/historyManager';
+import { getDraftRecords, getCompletedRecords, deleteFromHistory, SavedRecord, getSharedRecords, toggleShareRecord } from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Trash2, FileText, Clock, CheckCircle, Calendar, Search, Folder, FolderOpen, Undo2 } from 'lucide-react';
+import { Trash2, FileText, Clock, CheckCircle, Calendar, Search, Folder, FolderOpen, Share2, Users } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner@2.0.3';
 import {
@@ -19,27 +19,29 @@ import {
 interface HistoryProps {
   onLoadRecord: (record: SavedRecord) => void;
   onClose: () => void;
-  userId: string; // Add userId prop
+  userId: string;
+  userName: string;
 }
 
-export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
+export function History({ onLoadRecord, onClose, userId, userName }: HistoryProps) {
   const [draftRecords, setDraftRecords] = useState<SavedRecord[]>([]);
   const [completedRecords, setCompletedRecords] = useState<SavedRecord[]>([]);
+  const [sharedRecords, setSharedRecords] = useState<SavedRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
   const deletionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const loadHistory = () => {
-    setDraftRecords(getDraftRecords(userId)); // Pass userId
-    setCompletedRecords(getCompletedRecords(userId)); // Pass userId
+    setDraftRecords(getDraftRecords(userId));
+    setCompletedRecords(getCompletedRecords(userId));
+    setSharedRecords(getSharedRecords(userId));
   };
 
   useEffect(() => {
     loadHistory();
-  }, [userId]); // Add userId to dependencies
+  }, [userId]);
 
-  // Cleanup timeout on unmount
   useEffect(() => {
     return () => {
       if (deletionTimeoutRef.current) {
@@ -49,16 +51,13 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
   }, []);
 
   const handleDelete = (id: string) => {
-    // Set pending deletion state to hide the record from UI
     setPendingDeletion(id);
     setDeleteId(null);
 
-    // Clear any existing timeout
     if (deletionTimeoutRef.current) {
       clearTimeout(deletionTimeoutRef.current);
     }
 
-    // Show toast with undo button
     toast.error('Record deleted', {
       description: 'You have 10 seconds to undo this action',
       duration: 10000,
@@ -68,7 +67,6 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
       },
     });
 
-    // Set timeout to actually delete after 10 seconds
     deletionTimeoutRef.current = setTimeout(() => {
       deleteFromHistory(id);
       setPendingDeletion(null);
@@ -78,13 +76,11 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
   };
 
   const handleUndo = (id: string) => {
-    // Clear the timeout
     if (deletionTimeoutRef.current) {
       clearTimeout(deletionTimeoutRef.current);
       deletionTimeoutRef.current = null;
     }
 
-    // Restore the record
     setPendingDeletion(null);
     loadHistory();
     
@@ -96,6 +92,20 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
   const handleLoad = (record: SavedRecord) => {
     onLoadRecord(record);
     onClose();
+  };
+
+  const handleShareToggle = (recordId: string) => {
+    const isShared = toggleShareRecord(recordId, userName);
+    loadHistory();
+    if (isShared) {
+      toast.success('Record shared successfully', {
+        description: 'Other users can now view and use this record',
+      });
+    } else {
+      toast.success('Record unshared', {
+        description: 'This record is now private',
+      });
+    }
   };
 
   const formatDateTime = (dateString: string) => {
@@ -111,13 +121,12 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
 
   const filterRecords = (records: SavedRecord[]) => {
     if (!searchQuery.trim()) {
-      // Filter out pending deletion records
       return records.filter(record => record.id !== pendingDeletion);
     }
     
     const query = searchQuery.toLowerCase();
     return records.filter(record => 
-      record.id !== pendingDeletion && // Filter out pending deletion
+      record.id !== pendingDeletion &&
       (record.courseInfo.course_code.toLowerCase().includes(query) ||
       record.courseInfo.course_title.toLowerCase().includes(query) ||
       record.courseInfo.student_name.toLowerCase().includes(query) ||
@@ -126,7 +135,7 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
     );
   };
 
-  const renderRecordsList = (records: SavedRecord[], emptyMessage: string) => {
+  const renderRecordsList = (records: SavedRecord[], emptyMessage: string, showShare: boolean = false, isSharedView: boolean = false) => {
     const filteredRecords = filterRecords(records);
     
     if (filteredRecords.length === 0) {
@@ -176,6 +185,17 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
                   <span className="px-2 py-1 rounded text-xs bg-purple-100 text-purple-700">
                     {record.courseInfo.record_type}
                   </span>
+                  {record.isShared && (
+                    <span className="px-2 py-1 rounded text-xs bg-cyan-100 text-cyan-700 flex items-center gap-1">
+                      <Share2 className="w-3 h-3" />
+                      Shared
+                    </span>
+                  )}
+                  {isSharedView && record.sharedBy && (
+                    <span className="px-2 py-1 rounded text-xs bg-teal-100 text-teal-700">
+                      By: {record.sharedBy}
+                    </span>
+                  )}
                 </div>
                 
                 <div>
@@ -218,14 +238,40 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
                 >
                   Load
                 </Button>
-                <Button
-                  onClick={() => setDeleteId(record.id)}
-                  size="sm"
-                  variant="outline"
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                {!isSharedView && (
+                  <Button
+                    onClick={() => setDeleteId(record.id)}
+                    size="sm"
+                    variant="outline"
+                    className="text-red-600 hover:text-red-700 hover:bg-red-50 border-red-300"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+                {showShare && !isSharedView && (
+                  <Button
+                    onClick={() => handleShareToggle(record.id)}
+                    size="sm"
+                    variant="outline"
+                    className={`${
+                      record.isShared
+                        ? 'text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 border-cyan-300'
+                        : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-300'
+                    }`}
+                  >
+                    {record.isShared ? (
+                      <>
+                        <Users className="w-4 h-4 mr-1" />
+                        Unshare
+                      </>
+                    ) : (
+                      <>
+                        <Share2 className="w-4 h-4 mr-1" />
+                        Share
+                      </>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -239,7 +285,7 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-gray-800">History</h2>
-          <p className="text-gray-600">Your saved and draft lab records</p>
+          <p className="text-gray-600">Your saved, draft, and shared lab records</p>
         </div>
         <Button onClick={onClose} variant="outline">
           Close
@@ -258,9 +304,9 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
         />
       </div>
 
-      {/* Tabs for Completed and Draft */}
+      {/* Tabs for Drafts, Completed, and Shared */}
       <Tabs defaultValue="drafts" className="w-full">
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-3 mb-6">
           <TabsTrigger value="drafts" className="flex items-center gap-2">
             <Folder className="w-4 h-4" />
             Drafts ({draftRecords.length})
@@ -269,14 +315,28 @@ export function History({ onLoadRecord, onClose, userId }: HistoryProps) {
             <FolderOpen className="w-4 h-4" />
             Completed ({completedRecords.length})
           </TabsTrigger>
+          <TabsTrigger value="shared" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Shared ({sharedRecords.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="drafts">
-          {renderRecordsList(draftRecords, 'No draft records yet')}
+          {renderRecordsList(draftRecords, 'No draft records yet', false)}
         </TabsContent>
 
         <TabsContent value="completed">
-          {renderRecordsList(completedRecords, 'No completed records yet')}
+          {renderRecordsList(completedRecords, 'No completed records yet', true)}
+        </TabsContent>
+
+        <TabsContent value="shared">
+          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <p className="text-sm text-blue-800">
+              <Users className="w-4 h-4 inline mr-2" />
+              Browse records shared by other users. You can load and edit them to create your own version.
+            </p>
+          </div>
+          {renderRecordsList(sharedRecords, 'No shared records available', false, true)}
         </TabsContent>
       </Tabs>
 

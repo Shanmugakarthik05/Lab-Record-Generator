@@ -175,7 +175,16 @@ function createTheoryTable(experiments: TheoryExperiment[], qrCodes: string[]): 
       new TableRow({
         children: [
           createDataCell(exp.exp_no.toString(), AlignmentType.CENTER),
-          createDataCell(formatDate(exp.date), AlignmentType.CENTER),
+          new TableCell({
+            children: [
+              new Paragraph({
+                text: formatDate(exp.date),
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
+            verticalAlign: VerticalAlign.CENTER,
+            width: { size: 20, type: WidthType.PERCENTAGE }, // Set explicit width for date column
+          }),
           new TableCell({
             children: [
               new Paragraph({
@@ -293,6 +302,7 @@ function createProgrammingTable(sessions: ProgrammingSession[], qrCodes: string[
           new TableCell({
             children: dateCellParagraphs.length > 0 ? dateCellParagraphs : [new Paragraph('')],
             verticalAlign: VerticalAlign.CENTER,
+            width: { size: 20, type: WidthType.PERCENTAGE }, // Set explicit width for date column
           }),
           new TableCell({
             children: experimentsParagraphs,
