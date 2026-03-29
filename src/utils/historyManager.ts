@@ -181,3 +181,60 @@ export function isRecordShared(recordId: string): boolean {
   const record = getRecordById(recordId);
   return record?.isShared === true;
 }
+
+// Get all public/shared records (for community view)
+export function getAllPublicRecords(): SavedRecord[] {
+  return getHistory().filter(
+    record => 
+      record.status === 'complete' && 
+      record.isShared === true
+  );
+}
+
+// Get public records grouped by course code
+export function getPublicRecordsByCategory(): Record<string, SavedRecord[]> {
+  const publicRecords = getAllPublicRecords();
+  const grouped: Record<string, SavedRecord[]> = {};
+  
+  publicRecords.forEach(record => {
+    const courseCode = record.courseInfo.course_code;
+    if (!grouped[courseCode]) {
+      grouped[courseCode] = [];
+    }
+    grouped[courseCode].push(record);
+  });
+  
+  return grouped;
+}
+
+// Get public records grouped by department
+export function getPublicRecordsByDepartment(): Record<string, SavedRecord[]> {
+  const publicRecords = getAllPublicRecords();
+  const grouped: Record<string, SavedRecord[]> = {};
+  
+  publicRecords.forEach(record => {
+    const department = record.courseInfo.department;
+    if (!grouped[department]) {
+      grouped[department] = [];
+    }
+    grouped[department].push(record);
+  });
+  
+  return grouped;
+}
+
+// Get public records grouped by record type
+export function getPublicRecordsByType(): Record<string, SavedRecord[]> {
+  const publicRecords = getAllPublicRecords();
+  const grouped: Record<string, SavedRecord[]> = {};
+  
+  publicRecords.forEach(record => {
+    const type = record.courseInfo.record_type;
+    if (!grouped[type]) {
+      grouped[type] = [];
+    }
+    grouped[type].push(record);
+  });
+  
+  return grouped;
+}

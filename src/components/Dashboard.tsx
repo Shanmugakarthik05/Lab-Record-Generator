@@ -8,7 +8,7 @@ import { ProgrammingSessionsForm } from './ProgrammingSessionsForm';
 import { DocumentPreview } from './DocumentPreview';
 import { DownloadButtons } from './DownloadButtons';
 import { History } from './History';
-import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut, Moon, Sun } from 'lucide-react';
+import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut } from 'lucide-react';
 import { saveToHistory, getStudentInfo, saveStudentInfo, SavedRecord } from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -28,11 +28,8 @@ export function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'main' | 'history'>('main');
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    const savedTheme = localStorage.getItem('theme');
-    return (savedTheme === 'dark' ? 'dark' : 'light') as 'light' | 'dark';
-  });
   const [step, setStep] = useState<number>(1);
+  const [currentRecordId, setCurrentRecordId] = useState<string | null>(null);
   const [courseInfo, setCourseInfo] = useState<CourseInfo>({
     record_type: '',
     course_code: '',
@@ -155,20 +152,6 @@ export function Dashboard() {
     };
   }, [user, courseInfo, theoryExperiments, programmingSessions, step]);
 
-  // Apply theme to document
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
-  };
-
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/');
@@ -176,7 +159,7 @@ export function Dashboard() {
 
   const handleRecordTypeSelect = (type: 'Theory Record' | 'Programming Record') => {
     setCourseInfo({ ...courseInfo, record_type: type });
-    setStep(2); // Go directly to experiments (formerly step 3)
+    setStep(2);
   };
 
   const handleCourseInfoSubmit = (info: CourseInfo) => {
@@ -186,12 +169,18 @@ export function Dashboard() {
 
   const handleExperimentsSubmit = (experiments: TheoryExperiment[]) => {
     setTheoryExperiments(experiments);
-    setStep(3); // Go to preview (formerly step 4)
+    // Generate unique record ID when experiments are submitted
+    const recordId = `${courseInfo.course_code}_${Date.now()}`;
+    setCurrentRecordId(recordId);
+    setStep(4);
   };
 
   const handleSessionsSubmit = (sessions: ProgrammingSession[]) => {
     setProgrammingSessions(sessions);
-    setStep(3); // Go to preview (formerly step 4)
+    // Generate unique record ID when sessions are submitted
+    const recordId = `${courseInfo.course_code}_${Date.now()}`;
+    setCurrentRecordId(recordId);
+    setStep(4);
   };
 
   const handleBack = () => {
@@ -201,6 +190,7 @@ export function Dashboard() {
   const handleReset = () => {
     const savedStudentInfo = user ? getStudentInfo(user.id) : null;
     setStep(1);
+    setCurrentRecordId(null); // Clear record ID when resetting
     setCourseInfo({
       record_type: '',
       course_code: '',
@@ -222,7 +212,8 @@ export function Dashboard() {
     setCourseInfo(record.courseInfo);
     setTheoryExperiments(record.theoryExperiments);
     setProgrammingSessions(record.programmingSessions);
-    setStep(3);
+    setCurrentRecordId(record.id); // Set the record ID when loading from history
+    setStep(4);
     setViewMode('main');
   };
 
@@ -258,17 +249,17 @@ export function Dashboard() {
   };
 
   return (
-    <div className={`min-h-screen bg-gradient-to-br ${theme === 'dark' ? 'from-gray-900 via-gray-800 to-gray-700' : 'from-blue-50 via-white to-purple-50'}`}>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <div className="container mx-auto px-4 py-8 max-w-6xl">
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div className="flex-1">
               <div className="flex items-center justify-center gap-3 mb-4">
-                <FileText className={`w-12 h-12 ${theme === 'dark' ? 'text-blue-400' : 'text-blue-600'}`} />
-                <h1 className={theme === 'dark' ? 'text-blue-300' : 'text-blue-900'}>Lab Record Generator</h1>
+                <FileText className="w-12 h-12 text-blue-600" />
+                <h1 className="text-blue-900">Lab Record Generator</h1>
               </div>
-              <p className={`text-center ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+              <p className="text-gray-600 text-center">
                 Generate professional lab records for Saveetha Engineering College with QR codes and exports
               </p>
             </div>
@@ -303,31 +294,22 @@ export function Dashboard() {
             </div>
           </div>
           
-          {/* History and Theme Toggle Buttons */}
-          <div className="flex justify-center items-center gap-4 mt-4">
+          {/* History Button */}
+          <div className="flex justify-center mt-4">
             <Button
               onClick={() => setViewMode(viewMode === 'main' ? 'history' : 'main')}
               variant="outline"
-              className="border-purple-300 text-purple-700 hover:bg-purple-50 dark:border-purple-600 dark:text-purple-400 dark:hover:bg-purple-900/20"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
             >
               <HistoryIcon className="w-4 h-4 mr-2" />
               {viewMode === 'main' ? 'View History' : 'Back to Generator'}
-            </Button>
-            
-            <Button
-              onClick={toggleTheme}
-              variant="outline"
-              size="icon"
-              className="border-gray-300 hover:bg-gray-100 dark:border-gray-600 dark:hover:bg-gray-800"
-            >
-              {theme === 'light' ? <Moon className="w-5 h-5" /> : <Sun className="w-5 h-5" />}
             </Button>
           </div>
         </div>
 
         {/* Main Content or History */}
         {viewMode === 'history' ? (
-          <div className={`rounded-lg shadow-xl p-8 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+          <div className="bg-white rounded-lg shadow-xl p-8">
             <History 
               onLoadRecord={handleLoadRecord} 
               onClose={() => setViewMode('main')} 
@@ -340,7 +322,7 @@ export function Dashboard() {
             {/* Progress Indicator */}
             <div className="mb-8">
               <div className="flex items-center justify-center gap-4">
-                {[1, 2, 3].map((s) => (
+                {[1, 2, 3, 4].map((s) => (
                   <div key={s} className="flex items-center">
                     <div
                       className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
@@ -351,7 +333,7 @@ export function Dashboard() {
                     >
                       {s}
                     </div>
-                    {s < 3 && (
+                    {s < 4 && (
                       <div
                         className={`w-12 h-1 ${
                           step > s ? 'bg-blue-600' : 'bg-gray-200'
@@ -361,50 +343,59 @@ export function Dashboard() {
                   </div>
                 ))}
               </div>
-              <div className={`flex justify-center gap-24 mt-2 text-sm ${theme === 'dark' ? 'text-gray-300' : 'text-gray-600'}`}>
+              <div className="flex justify-center gap-16 mt-2 text-sm text-gray-600">
                 <span>Type</span>
+                <span>Course Info</span>
                 <span>Experiments</span>
                 <span>Generate</span>
               </div>
             </div>
 
             {/* Step Content */}
-            <div className={`rounded-lg shadow-xl p-8 ${theme === 'dark' ? 'bg-gray-800' : 'bg-white'}`}>
+            <div className="bg-white rounded-lg shadow-xl p-8">
               {step === 1 && <RecordTypeSelector onSelect={handleRecordTypeSelect} />}
               
-              {step === 2 && courseInfo.record_type === 'Theory Record' && (
+              {step === 2 && (
+                <CourseInfoForm
+                  initialData={courseInfo}
+                  onSubmit={handleCourseInfoSubmit}
+                  onBack={handleBack}
+                />
+              )}
+              
+              {step === 3 && courseInfo.record_type === 'Theory Record' && (
                 <TheoryExperimentsForm
                   initialData={theoryExperiments}
-                  courseInfo={courseInfo}
-                  onCourseInfoChange={setCourseInfo}
                   onSubmit={handleExperimentsSubmit}
                   onBack={handleBack}
                 />
               )}
               
-              {step === 2 && courseInfo.record_type === 'Programming Record' && (
+              {step === 3 && courseInfo.record_type === 'Programming Record' && (
                 <ProgrammingSessionsForm
                   initialData={programmingSessions}
-                  courseInfo={courseInfo}
-                  onCourseInfoChange={setCourseInfo}
                   onSubmit={handleSessionsSubmit}
                   onBack={handleBack}
                 />
               )}
               
-              {step === 3 && (
+              {step === 4 && (
                 <div>
                   <DocumentPreview
                     courseInfo={courseInfo}
                     theoryExperiments={theoryExperiments}
                     programmingSessions={programmingSessions}
                     onEditCourseInfo={() => setStep(2)}
-                    onEditExperiments={() => setStep(2)}
+                    onEditExperiments={() => setStep(3)}
                   />
                   <DownloadButtons
                     courseInfo={courseInfo}
                     theoryExperiments={theoryExperiments}
                     programmingSessions={programmingSessions}
+                    recordId={currentRecordId || undefined}
+                    userId={user.id}
+                    userName={getUserDisplayName()}
+                    showShare={true}
                   />
                   <div className="flex gap-4 justify-center mt-6">
                     <button

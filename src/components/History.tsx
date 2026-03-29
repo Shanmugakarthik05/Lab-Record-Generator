@@ -1,8 +1,19 @@
 import { useState, useEffect, useRef } from 'react';
-import { getDraftRecords, getCompletedRecords, deleteFromHistory, SavedRecord, getSharedRecords, toggleShareRecord } from '../utils/historyManager';
+import { 
+  getDraftRecords, 
+  getCompletedRecords, 
+  deleteFromHistory, 
+  SavedRecord, 
+  getSharedRecords, 
+  toggleShareRecord, 
+  getAllPublicRecords,
+  getPublicRecordsByCategory,
+  getPublicRecordsByDepartment,
+  getPublicRecordsByType
+} from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Trash2, FileText, Clock, CheckCircle, Calendar, Search, Folder, FolderOpen, Share2, Users } from 'lucide-react';
+import { Trash2, FileText, Clock, CheckCircle, Calendar, Search, Folder, FolderOpen, Share2, Users, Globe, ChevronDown, ChevronRight } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner@2.0.3';
 import {
@@ -15,6 +26,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from './ui/alert-dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from './ui/select';
 
 interface HistoryProps {
   onLoadRecord: (record: SavedRecord) => void;
@@ -27,6 +45,9 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
   const [draftRecords, setDraftRecords] = useState<SavedRecord[]>([]);
   const [completedRecords, setCompletedRecords] = useState<SavedRecord[]>([]);
   const [sharedRecords, setSharedRecords] = useState<SavedRecord[]>([]);
+  const [publicRecords, setPublicRecords] = useState<SavedRecord[]>([]);
+  const [categoryView, setCategoryView] = useState<'course' | 'department' | 'type'>('course');
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
@@ -36,6 +57,7 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
     setDraftRecords(getDraftRecords(userId));
     setCompletedRecords(getCompletedRecords(userId));
     setSharedRecords(getSharedRecords(userId));
+    setPublicRecords(getAllPublicRecords());
   };
 
   useEffect(() => {
@@ -132,6 +154,164 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
       record.courseInfo.student_name.toLowerCase().includes(query) ||
       record.courseInfo.register_number.toLowerCase().includes(query) ||
       record.courseInfo.department.toLowerCase().includes(query))
+    );
+  };
+
+  const toggleCategory = (category: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(category)) {
+      newExpanded.delete(category);
+    } else {
+      newExpanded.add(category);
+    }
+    setExpandedCategories(newExpanded);
+  };
+
+  const renderCategorizedRecords = () => {
+    let groupedRecords: Record<string, SavedRecord[]> = {};
+    
+    switch (categoryView) {
+      case 'course':
+        groupedRecords = getPublicRecordsByCategory();
+        break;
+      case 'department':
+        groupedRecords = getPublicRecordsByDepartment();
+        break;
+      case 'type':
+        groupedRecords = getPublicRecordsByType();
+        break;
+    }
+
+    const categories = Object.keys(groupedRecords).sort();
+
+    if (categories.length === 0) {
+      return (
+        <div className="text-center py-12 bg-gray-50 rounded-lg">
+          <Globe className="w-16 h-16 mx-auto text-gray-400 mb-4" />
+          <p className="text-gray-600">No community records available yet</p>
+          <p className="text-gray-500 text-sm mt-2">
+            Share your completed records to contribute to the community!
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="space-y-3">
+        {categories.map((category) => {
+          const records = filterRecords(groupedRecords[category]);
+          const isExpanded = expandedCategories.has(category);
+
+          if (records.length === 0 && searchQuery) {
+            return null; // Hide empty categories when searching
+          }
+
+          return (
+            <div key={category} className="border-2 border-gray-200 rounded-lg overflow-hidden">
+              <button
+                onClick={() => toggleCategory(category)}
+                className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 transition-colors"
+              >
+                <div className="flex items-center gap-3">
+                  {isExpanded ? (
+                    <ChevronDown className="w-5 h-5 text-blue-600" />
+                  ) : (
+                    <ChevronRight className="w-5 h-5 text-blue-600" />
+                  )}
+                  <div className="text-left">
+                    <h3 className="font-semibold text-gray-800">{category}</h3>
+                    <p className="text-sm text-gray-600">
+                      {records.length} {records.length === 1 ? 'record' : 'records'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {groupedRecords[category].some(r => r.courseInfo.record_type === 'Theory Record') && (
+                    <span className="px-2 py-1 rounded text-xs bg-purple-100 text-purple-700">
+                      Theory
+                    </span>
+                  )}
+                  {groupedRecords[category].some(r => r.courseInfo.record_type === 'Programming Record') && (
+                    <span className="px-2 py-1 rounded text-xs bg-indigo-100 text-indigo-700">
+                      Programming
+                    </span>
+                  )}
+                </div>
+              </button>
+
+              {isExpanded && (
+                <div className="p-4 space-y-3 bg-white">
+                  {records.map((record) => (
+                    <div
+                      key={record.id}
+                      className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <span className="px-2 py-1 rounded text-xs bg-blue-100 text-blue-700">
+                              {record.courseInfo.course_code}
+                            </span>
+                            <span className="px-2 py-1 rounded text-xs bg-purple-100 text-purple-700">
+                              {record.courseInfo.record_type}
+                            </span>
+                            {record.sharedBy && (
+                              <span className="px-2 py-1 rounded text-xs bg-teal-100 text-teal-700">
+                                By: {record.sharedBy}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <h4 className="font-medium text-gray-800">{record.courseInfo.course_title}</h4>
+                          </div>
+                          
+                          <div className="text-sm text-gray-600 space-y-1">
+                            <div>
+                              <span className="text-gray-500">Student:</span>{' '}
+                              {record.courseInfo.student_name} ({record.courseInfo.register_number})
+                            </div>
+                            <div>
+                              <span className="text-gray-500">Department:</span>{' '}
+                              {record.courseInfo.department} • {record.courseInfo.semester}
+                            </div>
+                            {record.courseInfo.record_type === 'Theory Record' && (
+                              <div>
+                                <span className="text-gray-500">Experiments:</span>{' '}
+                                {record.theoryExperiments.length}
+                              </div>
+                            )}
+                            {record.courseInfo.record_type === 'Programming Record' && (
+                              <div>
+                                <span className="text-gray-500">Sessions:</span>{' '}
+                                {record.programmingSessions.length}
+                              </div>
+                            )}
+                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                              <Calendar className="w-3 h-3" />
+                              Shared: {formatDateTime(record.savedAt)}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => handleLoad(record)}
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
+                            Load
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     );
   };
 
@@ -304,9 +484,9 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
         />
       </div>
 
-      {/* Tabs for Drafts, Completed, and Shared */}
+      {/* Tabs for Drafts, Completed, Shared, and Community */}
       <Tabs defaultValue="drafts" className="w-full">
-        <TabsList className="grid w-full grid-cols-3 mb-6">
+        <TabsList className="grid w-full grid-cols-4 mb-6">
           <TabsTrigger value="drafts" className="flex items-center gap-2">
             <Folder className="w-4 h-4" />
             Drafts ({draftRecords.length})
@@ -317,7 +497,11 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
           </TabsTrigger>
           <TabsTrigger value="shared" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            Shared ({sharedRecords.length})
+            My Shared ({sharedRecords.length})
+          </TabsTrigger>
+          <TabsTrigger value="community" className="flex items-center gap-2">
+            <Globe className="w-4 h-4" />
+            Community ({publicRecords.length})
           </TabsTrigger>
         </TabsList>
 
@@ -337,6 +521,34 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
             </p>
           </div>
           {renderRecordsList(sharedRecords, 'No shared records available', false, true)}
+        </TabsContent>
+
+        <TabsContent value="community">
+          <div className="space-y-4">
+            <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
+              <div>
+                <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                  <Globe className="w-5 h-5 text-blue-600" />
+                  Community Records
+                </h3>
+                <p className="text-sm text-gray-600 mt-1">
+                  Explore lab records shared by all users, organized by category
+                </p>
+              </div>
+              <Select value={categoryView} onValueChange={(value: any) => setCategoryView(value)}>
+                <SelectTrigger className="w-40">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="course">By Course</SelectItem>
+                  <SelectItem value="department">By Department</SelectItem>
+                  <SelectItem value="type">By Type</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {renderCategorizedRecords()}
+          </div>
         </TabsContent>
       </Tabs>
 

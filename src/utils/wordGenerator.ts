@@ -183,7 +183,7 @@ function createTheoryTable(experiments: TheoryExperiment[], qrCodes: string[]): 
               }),
             ],
             verticalAlign: VerticalAlign.CENTER,
-            width: { size: 20, type: WidthType.PERCENTAGE }, // Set explicit width for date column
+            width: { size: 25, type: WidthType.PERCENTAGE }, // Increased from 20% to 25% for more date space
           }),
           new TableCell({
             children: [
@@ -302,7 +302,7 @@ function createProgrammingTable(sessions: ProgrammingSession[], qrCodes: string[
           new TableCell({
             children: dateCellParagraphs.length > 0 ? dateCellParagraphs : [new Paragraph('')],
             verticalAlign: VerticalAlign.CENTER,
-            width: { size: 20, type: WidthType.PERCENTAGE }, // Set explicit width for date column
+            width: { size: 25, type: WidthType.PERCENTAGE }, // Increased from 20% to 25% for more date space
           }),
           new TableCell({
             children: experimentsParagraphs,
