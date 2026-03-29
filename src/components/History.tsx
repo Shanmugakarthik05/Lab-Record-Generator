@@ -5,7 +5,7 @@ import {
   deleteFromHistory, 
   SavedRecord, 
   getSharedRecords, 
-  toggleShareRecord, 
+  toggleShareRecord,
   getAllPublicRecords,
   getPublicRecordsByCategory,
   getPublicRecordsByDepartment,
@@ -497,7 +497,7 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
           </TabsTrigger>
           <TabsTrigger value="shared" className="flex items-center gap-2">
             <Users className="w-4 h-4" />
-            My Shared ({sharedRecords.length})
+            Shared ({sharedRecords.length})
           </TabsTrigger>
           <TabsTrigger value="community" className="flex items-center gap-2">
             <Globe className="w-4 h-4" />

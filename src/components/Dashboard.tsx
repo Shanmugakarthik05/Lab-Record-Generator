@@ -29,7 +29,6 @@ export function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'main' | 'history'>('main');
   const [step, setStep] = useState<number>(1);
-  const [currentRecordId, setCurrentRecordId] = useState<string | null>(null);
   const [courseInfo, setCourseInfo] = useState<CourseInfo>({
     record_type: '',
     course_code: '',
@@ -169,17 +168,11 @@ export function Dashboard() {
 
   const handleExperimentsSubmit = (experiments: TheoryExperiment[]) => {
     setTheoryExperiments(experiments);
-    // Generate unique record ID when experiments are submitted
-    const recordId = `${courseInfo.course_code}_${Date.now()}`;
-    setCurrentRecordId(recordId);
     setStep(4);
   };
 
   const handleSessionsSubmit = (sessions: ProgrammingSession[]) => {
     setProgrammingSessions(sessions);
-    // Generate unique record ID when sessions are submitted
-    const recordId = `${courseInfo.course_code}_${Date.now()}`;
-    setCurrentRecordId(recordId);
     setStep(4);
   };
 
@@ -190,7 +183,6 @@ export function Dashboard() {
   const handleReset = () => {
     const savedStudentInfo = user ? getStudentInfo(user.id) : null;
     setStep(1);
-    setCurrentRecordId(null); // Clear record ID when resetting
     setCourseInfo({
       record_type: '',
       course_code: '',
@@ -212,7 +204,6 @@ export function Dashboard() {
     setCourseInfo(record.courseInfo);
     setTheoryExperiments(record.theoryExperiments);
     setProgrammingSessions(record.programmingSessions);
-    setCurrentRecordId(record.id); // Set the record ID when loading from history
     setStep(4);
     setViewMode('main');
   };
@@ -392,10 +383,6 @@ export function Dashboard() {
                     courseInfo={courseInfo}
                     theoryExperiments={theoryExperiments}
                     programmingSessions={programmingSessions}
-                    recordId={currentRecordId || undefined}
-                    userId={user.id}
-                    userName={getUserDisplayName()}
-                    showShare={true}
                   />
                   <div className="flex gap-4 justify-center mt-6">
                     <button

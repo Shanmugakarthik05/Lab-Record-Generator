@@ -182,7 +182,7 @@ export function isRecordShared(recordId: string): boolean {
   return record?.isShared === true;
 }
 
-// Get all public/shared records (for community view)
+// Get all public/shared records from all users (for community view)
 export function getAllPublicRecords(): SavedRecord[] {
   return getHistory().filter(
     record => 
