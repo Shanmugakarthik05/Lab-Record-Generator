@@ -52,9 +52,7 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
     if (index === 0) return;
     const updated = [...experiments];
     [updated[index - 1], updated[index]] = [updated[index], updated[index - 1]];
-    // Automatically renumber experiments
-    const renumbered = updated.map((exp, i) => ({ ...exp, exp_no: String(i + 1) }));
-    setExperiments(renumbered);
+    setExperiments(updated);
     toast.success('Experiment moved up');
   };
 
@@ -62,9 +60,7 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
     if (index === experiments.length - 1) return;
     const updated = [...experiments];
     [updated[index], updated[index + 1]] = [updated[index + 1], updated[index]];
-    // Automatically renumber experiments
-    const renumbered = updated.map((exp, i) => ({ ...exp, exp_no: String(i + 1) }));
-    setExperiments(renumbered);
+    setExperiments(updated);
     toast.success('Experiment moved down');
   };
 
