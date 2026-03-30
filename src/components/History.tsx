@@ -13,7 +13,8 @@ import {
 } from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Trash2, FileText, Clock, CheckCircle, Calendar, Search, Folder, FolderOpen, Share2, Users, Globe, ChevronDown, ChevronRight } from 'lucide-react';
+import { ShareLinkButtons } from './ShareLinkButtons';
+import { Trash2, FileText, Clock, CheckCircle, Calendar, Search, Folder, FolderOpen, Share2, Users, Globe, ChevronDown, ChevronRight, Link2, MessageCircle, Copy, Check } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from './ui/tabs';
 import { toast } from 'sonner@2.0.3';
 import {
@@ -454,6 +455,14 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
                 )}
               </div>
             </div>
+            
+            {/* Share Link Buttons - Show when record is shared */}
+            {record.isShared && !isSharedView && (
+              <ShareLinkButtons 
+                recordId={record.id} 
+                courseTitle={record.courseInfo.course_title}
+              />
+            )}
           </div>
         ))}
       </div>

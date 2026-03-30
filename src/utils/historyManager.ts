@@ -41,6 +41,9 @@ export function saveToHistory(
     programmingSessions,
     savedAt: new Date().toISOString(),
     status,
+    // Auto-share to community when status is 'complete'
+    isShared: status === 'complete',
+    sharedBy: status === 'complete' ? courseInfo.student_name : undefined,
   };
   
   // Check if there's already a draft for this course by this user

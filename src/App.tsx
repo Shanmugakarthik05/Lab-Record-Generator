@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { LoginPage } from './components/LoginPage';
 import { Dashboard } from './components/Dashboard';
+import { PublicViewer } from './components/PublicViewer';
 
 export interface CourseInfo {
   record_type: 'Theory Record' | 'Programming Record' | '';
@@ -44,6 +45,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<LoginPage />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/view/:encodedId" element={<PublicViewer />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
