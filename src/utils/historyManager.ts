@@ -97,7 +97,7 @@ export async function saveToHistory(
   status: 'draft' | 'complete',
   userId: string
 ): Promise<void> {
-  const record: SavedRecord = {
+  const record: any = {
     id: recordId,
     userId,
     courseInfo,
@@ -106,10 +106,13 @@ export async function saveToHistory(
     savedAt: new Date().toISOString(),
     status,
     isShared: status === 'complete',
-    sharedBy: status === 'complete' ? courseInfo.student_name : undefined,
   };
   
-  await setDoc(doc(db, RECORDS_COLLECTION, recordId), record);
+  if (status === 'complete') {
+    record.sharedBy = courseInfo.student_name;
+  }
+  
+  await setDoc(doc(db, RECORDS_COLLECTION, recordId), record as SavedRecord);
 }
 
 export async function getHistory(): Promise<SavedRecord[]> {
