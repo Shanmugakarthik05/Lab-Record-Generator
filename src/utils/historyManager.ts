@@ -1,6 +1,6 @@
 import { CourseInfo, TheoryExperiment, ProgrammingSession } from '../App';
 import { db } from './firebase/config';
-import { collection, doc, setDoc, getDoc, getDocs, query, where, deleteDoc } from 'firebase/firestore';
+import { collection, doc, setDoc, getDoc, getDocs, query, where, deleteDoc, onSnapshot, orderBy } from 'firebase/firestore';
 
 export interface SavedRecord {
   id: string;
@@ -209,4 +209,50 @@ export async function getPublicRecordsByType(): Promise<Record<string, SavedReco
   });
   
   return grouped;
+}
+
+// ─── Real-time subscriptions ──────────────────────────────────────────────
+
+/**
+ * Subscribe to a user's records in real-time.
+ * Returns an unsubscribe function — call it to stop listening.
+ */
+export function subscribeToUserHistory(
+  userId: string,
+  callback: (records: SavedRecord[]) => void
+): () => void {
+  const q = query(
+    collection(db, RECORDS_COLLECTION),
+    where('userId', '==', userId)
+  );
+  return onSnapshot(q, (snapshot) => {
+    const records = snapshot.docs
+      .map(d => d.data() as SavedRecord)
+      .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
+    callback(records);
+  }, (err) => {
+    console.error('subscribeToUserHistory error:', err);
+  });
+}
+
+/**
+ * Subscribe to ALL public (isShared=true, status=complete) records in real-time.
+ * Returns an unsubscribe function.
+ */
+export function subscribeToPublicRecords(
+  callback: (records: SavedRecord[]) => void
+): () => void {
+  const q = query(
+    collection(db, RECORDS_COLLECTION),
+    where('status', '==', 'complete'),
+    where('isShared', '==', true)
+  );
+  return onSnapshot(q, (snapshot) => {
+    const records = snapshot.docs
+      .map(d => d.data() as SavedRecord)
+      .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
+    callback(records);
+  }, (err) => {
+    console.error('subscribeToPublicRecords error:', err);
+  });
 }

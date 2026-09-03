@@ -2,210 +2,190 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getRecordById, SavedRecord } from '../utils/historyManager';
 import { DocumentPreview } from './DocumentPreview';
-import { Button } from './ui/button';
-import { ArrowLeft, Download, FileText, AlertCircle } from 'lucide-react';
-import { Alert, AlertDescription } from './ui/alert';
 import { generatePDFDocument } from '../utils/pdfGenerator';
 import { generateWordDocument } from '../utils/wordGenerator';
-import { toast } from 'sonner@2.0.3';
 
 export function PublicViewer() {
   const { encodedId } = useParams<{ encodedId: string }>();
   const navigate = useNavigate();
   const [record, setRecord] = useState<SavedRecord | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<'not-found' | 'private' | 'invalid' | null>(null);
   const [downloading, setDownloading] = useState(false);
+  const [dlStatus, setDlStatus] = useState('');
 
   useEffect(() => {
-    let isMounted = true;
-    
-    const loadRecord = async () => {
-      if (encodedId) {
+    let mounted = true;
+    const load = async () => {
+      if (!encodedId) { setError('invalid'); setLoading(false); return; }
+      try {
+        let decodedId: string;
         try {
-          const decodedId = atob(encodedId);
-          const foundRecord = await getRecordById(decodedId);
-          
-          if (isMounted) {
-            if (foundRecord && foundRecord.isShared) {
-              setRecord(foundRecord);
-            } else {
-              setRecord(null);
-            }
-          }
-        } catch (error) {
-          console.error('Error loading shared record:', error);
-          if (isMounted) setRecord(null);
-        } finally {
-          if (isMounted) setLoading(false);
+          decodedId = atob(encodedId);
+        } catch {
+          setError('invalid'); setLoading(false); return;
         }
+        const found = await getRecordById(decodedId);
+        if (!mounted) return;
+        if (!found) { setError('not-found'); }
+        else if (!found.isShared) { setError('private'); }
+        else { setRecord(found); }
+      } catch (e: any) {
+        if (!mounted) return;
+        // Firestore permission error
+        if (e?.code === 'permission-denied') setError('private');
+        else setError('not-found');
+      } finally {
+        if (mounted) setLoading(false);
       }
     };
-    
-    loadRecord();
-    
-    return () => {
-      isMounted = false;
-    };
+    load();
+    return () => { mounted = false; };
   }, [encodedId]);
 
   const handleDownloadPDF = async () => {
     if (!record) return;
-    
-    setDownloading(true);
+    setDownloading(true); setDlStatus('Generating PDF...');
     try {
-      await generatePDFDocument(
-        record.courseInfo,
-        record.theoryExperiments,
-        record.programmingSessions
-      );
-      toast.success('PDF downloaded successfully!');
-    } catch (error) {
-      console.error('Error generating PDF:', error);
-      toast.error('Failed to download PDF');
-    } finally {
-      setDownloading(false);
-    }
+      await generatePDFDocument(record.courseInfo, record.theoryExperiments, record.programmingSessions);
+      setDlStatus('PDF downloaded!');
+    } catch { setDlStatus('PDF failed. Try again.'); }
+    finally { setDownloading(false); setTimeout(() => setDlStatus(''), 3000); }
   };
 
   const handleDownloadWord = async () => {
     if (!record) return;
-    
-    setDownloading(true);
+    setDownloading(true); setDlStatus('Generating Word doc...');
     try {
-      await generateWordDocument(
-        record.courseInfo,
-        record.theoryExperiments,
-        record.programmingSessions
-      );
-      toast.success('Word document downloaded successfully!');
-    } catch (error) {
-      console.error('Error generating Word:', error);
-      toast.error('Failed to download Word document');
-    } finally {
-      setDownloading(false);
-    }
+      await generateWordDocument(record.courseInfo, record.theoryExperiments, record.programmingSessions);
+      setDlStatus('Word document downloaded!');
+    } catch { setDlStatus('Word failed. Try again.'); }
+    finally { setDownloading(false); setTimeout(() => setDlStatus(''), 3000); }
+  };
+
+  // ── Shared styles ──────────────────────────────────────────────────────────
+  const pageStyle: React.CSSProperties = {
+    minHeight: '100vh',
+    background: 'linear-gradient(135deg, #eff6ff 0%, #f5f3ff 100%)',
+    fontFamily: "'Inter','Segoe UI',sans-serif",
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading shared record...</p>
+      <div style={{ ...pageStyle, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ width: 48, height: 48, border: '4px solid #e0e7ff', borderTopColor: '#4f46e5', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+          <p style={{ color: '#6b7280', fontSize: 15 }}>Loading shared record...</p>
+          <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
         </div>
       </div>
     );
   }
 
-  if (!record) {
+  if (error || !record) {
+    const msgs: Record<string, { icon: string; title: string; desc: string }> = {
+      'not-found': { icon: '🔍', title: 'Record Not Found', desc: 'This shared record does not exist or may have been deleted by its owner.' },
+      'private': { icon: '🔒', title: 'Record is Private', desc: 'The owner has made this record private. It is no longer publicly accessible.' },
+      'invalid': { icon: '⚠️', title: 'Invalid Link', desc: 'This link appears to be broken or malformed. Please ask the owner for a new link.' },
+    };
+    const m = msgs[error ?? 'not-found'];
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 flex items-center justify-center p-4">
-        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">
-          <Alert className="border-red-200 bg-red-50">
-            <AlertCircle className="h-4 w-4 text-red-600" />
-            <AlertDescription className="text-red-800">
-              <strong>Record Not Found</strong>
-              <p className="mt-2">
-                This shared record does not exist or is no longer available. The owner may have unshared it or deleted it.
-              </p>
-            </AlertDescription>
-          </Alert>
-          
-          <Button
+      <div style={{ ...pageStyle, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+        <div style={{ maxWidth: 440, width: '100%', background: '#fff', borderRadius: 20, boxShadow: '0 20px 60px rgba(0,0,0,0.1)', padding: '48px 40px', textAlign: 'center' }}>
+          <div style={{ fontSize: 56, marginBottom: 16 }}>{m.icon}</div>
+          <h2 style={{ color: '#1e293b', marginBottom: 8, fontSize: 22 }}>{m.title}</h2>
+          <p style={{ color: '#64748b', fontSize: 14, lineHeight: 1.7, marginBottom: 28 }}>{m.desc}</p>
+          <button
             onClick={() => navigate('/')}
-            className="w-full mt-6 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+            style={{ padding: '12px 28px', background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', color: '#fff', border: 'none', borderRadius: 10, cursor: 'pointer', fontWeight: 600, fontSize: 14, fontFamily: 'inherit' }}
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Go to Login
-          </Button>
+            Go to App →
+          </button>
         </div>
       </div>
     );
   }
+
+  const btnBase: React.CSSProperties = {
+    padding: '10px 20px', borderRadius: 10, border: 'none', cursor: downloading ? 'not-allowed' : 'pointer',
+    fontWeight: 600, fontSize: 13, fontFamily: 'inherit', display: 'flex', alignItems: 'center', gap: 8,
+    opacity: downloading ? 0.7 : 1, transition: 'transform 0.15s',
+  };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 py-8 px-4">
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="bg-gradient-to-br from-blue-500 to-purple-600 p-3 rounded-lg">
-                <FileText className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h1 className="text-gray-900 text-xl font-bold">Shared Lab Record</h1>
-                <p className="text-gray-600 text-sm">
-                  Shared by <strong>{record.sharedBy || 'Unknown'}</strong>
-                </p>
-              </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <Button
-                onClick={handleDownloadPDF}
-                disabled={downloading}
-                className="bg-red-600 hover:bg-red-700 text-white"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download PDF
-              </Button>
-              <Button
-                onClick={handleDownloadWord}
-                disabled={downloading}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Download Word
-              </Button>
+    <div style={pageStyle}>
+      {/* Header bar */}
+      <div style={{ background: '#fff', boxShadow: '0 1px 0 #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
+        <div style={{ maxWidth: 960, margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
+          {/* Left: info */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <div style={{ width: 44, height: 44, background: 'linear-gradient(135deg,#4f46e5,#7c3aed)', borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20 }}>📄</div>
+            <div>
+              <h1 style={{ margin: 0, fontSize: 16, fontWeight: 700, color: '#1e293b' }}>
+                {record.courseInfo.course_code} – {record.courseInfo.course_title}
+              </h1>
+              <p style={{ margin: 0, fontSize: 12, color: '#64748b' }}>
+                Shared by <strong>{record.sharedBy || 'Unknown'}</strong> · {record.courseInfo.department} · {record.courseInfo.record_type}
+              </p>
             </div>
           </div>
-          
-          {/* Record Info */}
-          <div className="mt-4 pt-4 border-t border-gray-200">
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-sm">
-              <div>
-                <span className="text-gray-500">Course:</span>
-                <span className="ml-2 font-semibold text-gray-800">
-                  {record.courseInfo.course_code} - {record.courseInfo.course_title}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-500">Department:</span>
-                <span className="ml-2 font-semibold text-gray-800">
-                  {record.courseInfo.department}
-                </span>
-              </div>
-              <div>
-                <span className="text-gray-500">Type:</span>
-                <span className="ml-2 font-semibold text-gray-800">
-                  {record.courseInfo.record_type}
-                </span>
-              </div>
-            </div>
+
+          {/* Right: actions */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+            {dlStatus && <span style={{ fontSize: 12, color: '#10b981', fontWeight: 500 }}>{dlStatus}</span>}
+            <button
+              onClick={handleDownloadPDF}
+              disabled={downloading}
+              style={{ ...btnBase, background: 'linear-gradient(135deg,#ef4444,#dc2626)', color: '#fff' }}
+            >
+              📄 Download PDF
+            </button>
+            <button
+              onClick={handleDownloadWord}
+              disabled={downloading}
+              style={{ ...btnBase, background: 'linear-gradient(135deg,#2563eb,#1d4ed8)', color: '#fff' }}
+            >
+              📝 Download Word
+            </button>
+            <button
+              onClick={() => navigate('/')}
+              style={{ ...btnBase, background: '#f1f5f9', color: '#475569' }}
+            >
+              ← Back to App
+            </button>
           </div>
         </div>
+      </div>
 
-        {/* Document Preview */}
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+      {/* Info pills */}
+      <div style={{ maxWidth: 960, margin: '20px auto 0', padding: '0 24px', display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+        {[
+          { label: 'Course', value: record.courseInfo.course_code },
+          { label: 'Department', value: record.courseInfo.department },
+          { label: 'Semester', value: record.courseInfo.semester },
+          { label: 'Type', value: record.courseInfo.record_type },
+          { label: record.courseInfo.record_type === 'Theory Record' ? 'Experiments' : 'Sessions',
+            value: String(record.courseInfo.record_type === 'Theory Record' ? record.theoryExperiments.length : record.programmingSessions.length) },
+        ].map(p => (
+          <div key={p.label} style={{ background: '#fff', borderRadius: 8, padding: '6px 14px', fontSize: 12, color: '#475569', boxShadow: '0 1px 3px rgba(0,0,0,0.08)' }}>
+            <span style={{ color: '#94a3b8' }}>{p.label}: </span>
+            <strong style={{ color: '#1e293b' }}>{p.value}</strong>
+          </div>
+        ))}
+      </div>
+
+      {/* Document preview */}
+      <div style={{ maxWidth: 960, margin: '20px auto 40px', padding: '0 24px' }}>
+        <div style={{ background: '#fff', borderRadius: 16, boxShadow: '0 4px 24px rgba(0,0,0,0.08)', overflow: 'hidden' }}>
           <DocumentPreview
             courseInfo={record.courseInfo}
             theoryExperiments={record.theoryExperiments}
             programmingSessions={record.programmingSessions}
           />
         </div>
-
-        {/* Footer */}
-        <div className="mt-6 text-center">
-          <Button
-            onClick={() => navigate('/')}
-            variant="outline"
-            className="border-blue-300 text-blue-700 hover:bg-blue-50"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to Login
-          </Button>
-        </div>
+        <p style={{ textAlign: 'center', fontSize: 12, color: '#94a3b8', marginTop: 20 }}>
+          Lab Record Generator · Saveetha Engineering College · Powered by Firebase
+        </p>
       </div>
     </div>
   );

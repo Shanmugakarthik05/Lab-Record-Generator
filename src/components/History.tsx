@@ -6,7 +6,9 @@ import {
   SavedRecord, 
   getSharedRecords, 
   toggleShareRecord,
-  getAllPublicRecords
+  getAllPublicRecords,
+  subscribeToUserHistory,
+  subscribeToPublicRecords,
 } from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -51,16 +53,34 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
   const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
   const deletionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const loadHistory = async () => {
-    setDraftRecords(await getDraftRecords(userId));
-    setCompletedRecords(await getCompletedRecords(userId));
-    setSharedRecords(await getSharedRecords(userId));
-    setPublicRecords(await getAllPublicRecords());
-  };
+  const [liveIndicator, setLiveIndicator] = useState(false);
 
+  // Real-time listener for user's own records
   useEffect(() => {
-    loadHistory();
+    const unsub = subscribeToUserHistory(userId, (allRecords) => {
+      setDraftRecords(allRecords.filter(r => r.status === 'draft'));
+      setCompletedRecords(allRecords.filter(r => r.status === 'complete'));
+      // Shared by others = complete + isShared + not mine
+      setSharedRecords(allRecords.filter(r => r.status === 'complete' && r.isShared && r.userId !== userId));
+    });
+    return unsub;
   }, [userId]);
+
+  // Real-time listener for public community records
+  useEffect(() => {
+    const unsub = subscribeToPublicRecords((records) => {
+      setPublicRecords(records);
+      // Flash live indicator briefly on update
+      setLiveIndicator(true);
+      setTimeout(() => setLiveIndicator(false), 2000);
+    });
+    return unsub;
+  }, []);
+
+  const loadHistory = async () => {
+    // Keep for manual refresh of shared records from others
+    setSharedRecords(await getSharedRecords(userId));
+  };
 
   useEffect(() => {
     return () => {
@@ -116,14 +136,14 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
 
   const handleShareToggle = async (recordId: string) => {
     const isShared = await toggleShareRecord(recordId, userName);
-    await loadHistory();
+    // No need to call loadHistory() - real-time listener picks up the change automatically
     if (isShared) {
-      toast.success('Record shared successfully', {
-        description: 'Other users can now view and use this record',
+      toast.success('Record shared to community! 🌐', {
+        description: 'Other students can now view and use this record in real-time.',
       });
     } else {
       toast.success('Record unshared', {
-        description: 'This record is now private',
+        description: 'This record is now private.',
       });
     }
   };
@@ -520,6 +540,12 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
           <TabsTrigger value="community" className="flex items-center gap-2">
             <Globe className="w-4 h-4" />
             Community ({publicRecords.length})
+            {liveIndicator && (
+              <span className="ml-1 flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse inline-block" />
+                <span className="text-xs text-green-600 font-semibold">Live</span>
+              </span>
+            )}
           </TabsTrigger>
         </TabsList>
 

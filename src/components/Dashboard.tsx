@@ -74,7 +74,7 @@ export function Dashboard() {
   // Load student info when user is set
   useEffect(() => {
     if (user) {
-      getStudentInfo(user.id).then((savedStudentInfo) => {
+      getStudentInfo(user.uid).then((savedStudentInfo) => {
         if (savedStudentInfo) {
           setCourseInfo(prev => ({
             ...prev,
@@ -92,7 +92,7 @@ export function Dashboard() {
       saveStudentInfo({
         student_name: courseInfo.student_name,
         register_number: courseInfo.register_number,
-        userId: user.id, // Add user ID
+        userId: user.uid,
       });
     }
   }, [user, courseInfo.student_name, courseInfo.register_number]);
@@ -105,8 +105,8 @@ export function Dashboard() {
           courseInfo,
           theoryExperiments,
           programmingSessions,
-          'draft', // Always auto-save as draft
-          user.id // Pass user ID
+          'draft',
+          user.uid
         );
       }, 1000);
 
@@ -124,8 +124,8 @@ export function Dashboard() {
           courseInfo,
           theoryExperiments,
           programmingSessions,
-          'draft', // Always auto-save as draft
-          user.id // Pass user ID
+          'draft',
+          user.uid
         );
       }
     };
@@ -136,8 +136,8 @@ export function Dashboard() {
           courseInfo,
           theoryExperiments,
           programmingSessions,
-          'draft', // Always auto-save as draft
-          user.id // Pass user ID
+          'draft',
+          user.uid
         );
       }
     };
@@ -181,7 +181,7 @@ export function Dashboard() {
   };
 
   const handleReset = async () => {
-    const savedStudentInfo = user ? await getStudentInfo(user.id) : null;
+    const savedStudentInfo = user ? await getStudentInfo(user.uid) : null;
     setStep(1);
     setCourseInfo({
       record_type: '',
@@ -215,7 +215,7 @@ export function Dashboard() {
       theoryExperiments,
       programmingSessions,
       'complete',
-      user.id // Pass user ID
+      user.uid
     );
     toast.success('✅ Record saved as complete! Starting new record...');
     // Reset and start a new record after a short delay
@@ -303,7 +303,7 @@ export function Dashboard() {
             <History 
               onLoadRecord={handleLoadRecord} 
               onClose={() => setViewMode('main')} 
-              userId={user.id} 
+              userId={user.uid} 
               userName={getUserDisplayName()}
             />
           </div>
