@@ -114,7 +114,7 @@ export function Dashboard() {
     }
   }, [user, courseInfo, theoryExperiments, programmingSessions, step]);
 
-  // Save on page unload or network reconnect
+  // Save on page unload or network reconnect/disconnect
   useEffect(() => {
     if (!user) return;
 
@@ -130,7 +130,7 @@ export function Dashboard() {
       }
     };
 
-    const handleOnline = () => {
+    const handleNetworkChange = () => {
       if (courseInfo.course_code && courseInfo.course_title) {
         saveToHistory(
           courseInfo,
@@ -139,15 +139,26 @@ export function Dashboard() {
           'draft',
           user.uid
         );
+        if (!navigator.onLine) {
+          toast.warning('Network connection lost', {
+            description: 'Your record has been safely auto-drafted to your device.',
+          });
+        } else {
+          toast.success('Back online', {
+            description: 'Your draft has been synced to the cloud.',
+          });
+        }
       }
     };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('online', handleOnline);
+    window.addEventListener('online', handleNetworkChange);
+    window.addEventListener('offline', handleNetworkChange);
 
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('online', handleNetworkChange);
+      window.removeEventListener('offline', handleNetworkChange);
     };
   }, [user, courseInfo, theoryExperiments, programmingSessions, step]);
 
@@ -198,6 +209,23 @@ export function Dashboard() {
     });
     setTheoryExperiments([]);
     setProgrammingSessions([]);
+  };
+
+  const handleCreateNewRecord = async () => {
+    // Explicitly save the current work as a draft before resetting
+    if (user && courseInfo.course_code && courseInfo.course_title) {
+      saveToHistory(
+        courseInfo,
+        theoryExperiments,
+        programmingSessions,
+        'draft',
+        user.uid
+      );
+      toast.success('Current record saved as draft!', {
+        description: 'You can find it in your History later.',
+      });
+    }
+    handleReset();
   };
 
   const handleLoadRecord = (record: SavedRecord) => {
@@ -385,7 +413,7 @@ export function Dashboard() {
                   />
                   <div className="flex gap-4 justify-center mt-6">
                     <button
-                      onClick={handleReset}
+                      onClick={handleCreateNewRecord}
                       className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       Create New Record
