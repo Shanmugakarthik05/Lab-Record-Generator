@@ -183,7 +183,11 @@ export async function toggleShareRecord(recordId: string, userName: string): Pro
   if (!record) return false;
   
   record.isShared = !record.isShared;
-  record.sharedBy = record.isShared ? userName : undefined;
+  if (record.isShared) {
+    record.sharedBy = userName;
+  } else {
+    delete (record as any).sharedBy;
+  }
   
   await setDoc(doc(db, RECORDS_COLLECTION, recordId), record);
   return record.isShared;
