@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, googleProvider } from '../utils/firebase/config';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithRedirect, getRedirectResult, sendPasswordResetEmail, updateProfile, onAuthStateChanged } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, updateProfile, onAuthStateChanged } from 'firebase/auth';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -28,26 +28,8 @@ export function LoginPage() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeField, setActiveField] = useState<'login' | 'signup' | 'reset' | null>(null);
 
-  // Check for redirect result on mount
+  // Listen for auth state changes in case they are already logged in
   useEffect(() => {
-    const checkRedirect = async () => {
-      try {
-        setLoading(true);
-        const result = await getRedirectResult(auth);
-        if (result?.user) {
-          navigate('/dashboard');
-        }
-      } catch (err: any) {
-        console.error('Redirect result error:', err);
-        setError(err.message || 'Failed to sign in with Google. Please try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    checkRedirect();
-
-    // Also listen for auth state changes in case they are already logged in
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         navigate('/dashboard');
@@ -240,14 +222,22 @@ export function LoginPage() {
 
   const handleGoogleLogin = async () => {
     try {
+      // Call popup FIRST before any state changes to prevent popup blockers
+      const userCredential = await signInWithPopup(auth, googleProvider);
+      
       setLoading(true);
       setError(null);
       setSuccess(null);
 
-      await signInWithRedirect(auth, googleProvider);
+      if (userCredential.user) {
+        navigate('/dashboard');
+      }
     } catch (err: any) {
       console.error('Google login error:', err);
-      setError(err.message || 'Failed to redirect to Google. Please try again.');
+      // Only set error if they didn't close the popup manually
+      if (err.code !== 'auth/popup-closed-by-user') {
+        setError(err.message || 'Failed to sign in with Google. Please try again.');
+      }
       setLoading(false);
     }
   };
