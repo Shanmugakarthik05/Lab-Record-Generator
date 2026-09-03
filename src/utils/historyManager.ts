@@ -22,6 +22,72 @@ export interface StudentInfo {
 
 const RECORDS_COLLECTION = 'records';
 const USERS_COLLECTION = 'users';
+const LOCAL_DRAFTS_KEY = 'lab_generator_drafts';
+
+// --- LOCAL STORAGE DRAFT SYSTEM ---
+
+export function saveDraftLocally(
+  recordId: string,
+  courseInfo: CourseInfo,
+  theoryExperiments: TheoryExperiment[],
+  programmingSessions: ProgrammingSession[],
+  userId: string
+) {
+  try {
+    const draftsJson = localStorage.getItem(LOCAL_DRAFTS_KEY);
+    let drafts: SavedRecord[] = draftsJson ? JSON.parse(draftsJson) : [];
+    
+    // Remove existing draft if it exists
+    drafts = drafts.filter(d => d.id !== recordId);
+    
+    // Add updated draft
+    const newDraft: SavedRecord = {
+      id: recordId,
+      userId,
+      courseInfo,
+      theoryExperiments,
+      programmingSessions,
+      savedAt: new Date().toISOString(),
+      status: 'draft',
+      isShared: false,
+    };
+    
+    drafts.push(newDraft);
+    localStorage.setItem(LOCAL_DRAFTS_KEY, JSON.stringify(drafts));
+  } catch (error) {
+    console.error("Failed to save draft locally", error);
+  }
+}
+
+export function getDraftsLocally(userId: string): SavedRecord[] {
+  try {
+    const draftsJson = localStorage.getItem(LOCAL_DRAFTS_KEY);
+    if (!draftsJson) return [];
+    
+    const drafts: SavedRecord[] = JSON.parse(draftsJson);
+    return drafts
+      .filter(d => d.userId === userId)
+      .sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
+  } catch (error) {
+    console.error("Failed to get local drafts", error);
+    return [];
+  }
+}
+
+export function deleteDraftLocally(recordId: string) {
+  try {
+    const draftsJson = localStorage.getItem(LOCAL_DRAFTS_KEY);
+    if (!draftsJson) return;
+    
+    let drafts: SavedRecord[] = JSON.parse(draftsJson);
+    drafts = drafts.filter(d => d.id !== recordId);
+    localStorage.setItem(LOCAL_DRAFTS_KEY, JSON.stringify(drafts));
+  } catch (error) {
+    console.error("Failed to delete local draft", error);
+  }
+}
+
+// --- FIREBASE HISTORY SYSTEM ---
 
 export async function saveToHistory(
   recordId: string,
@@ -201,6 +267,15 @@ export function subscribeToUserHistory(
     callback(records);
   }, (err) => {
     console.error('subscribeToUserHistory error:', err);
+    // Let the UI know there's a Firebase rules issue
+    if (typeof window !== 'undefined') {
+      import('sonner@2.0.3').then(({ toast }) => {
+        toast.error(`Database Error: ${err.message}`, {
+          description: "Your Firestore rules might be blocking access to read your records.",
+          duration: 8000
+        });
+      });
+    }
   });
 }
 

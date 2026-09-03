@@ -10,7 +10,13 @@ import { DocumentPreview } from './DocumentPreview';
 import { DownloadButtons } from './DownloadButtons';
 import { History } from './History';
 import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut } from 'lucide-react';
-import { saveToHistory, getStudentInfo, saveStudentInfo, SavedRecord } from '../utils/historyManager';
+import {
+  saveToHistory,
+  saveDraftLocally,
+  getStudentInfo,
+  saveStudentInfo,
+  SavedRecord
+} from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Toaster } from './ui/sonner';
@@ -102,17 +108,13 @@ export function Dashboard() {
   useEffect(() => {
     if (user && step >= 2 && courseInfo.course_code && courseInfo.course_title) {
       const timer = setTimeout(() => {
-        saveToHistory(
+        saveDraftLocally(
           currentRecordId,
           courseInfo,
           theoryExperiments,
           programmingSessions,
-          'draft',
           user.uid
-        ).catch(err => {
-          console.error("Auto-draft save failed:", err);
-          toast.error(`Auto-save failed: ${err.message || 'Unknown error'}`);
-        });
+        );
       }, 1000);
 
       return () => clearTimeout(timer);
@@ -125,34 +127,28 @@ export function Dashboard() {
 
     const handleBeforeUnload = () => {
       if (courseInfo.course_code && courseInfo.course_title) {
-        saveToHistory(
+        saveDraftLocally(
           currentRecordId,
           courseInfo,
           theoryExperiments,
           programmingSessions,
-          'draft',
           user.uid
-        ).catch(() => {});
+        );
       }
     };
 
     const handleNetworkChange = () => {
       if (courseInfo.course_code && courseInfo.course_title) {
-        saveToHistory(
+        saveDraftLocally(
           currentRecordId,
           courseInfo,
           theoryExperiments,
           programmingSessions,
-          'draft',
           user.uid
-        ).catch(() => {});
+        );
         if (!navigator.onLine) {
           toast.warning('Network connection lost', {
             description: 'Your record has been safely auto-drafted to your device.',
-          });
-        } else {
-          toast.success('Back online', {
-            description: 'Your draft has been synced to the cloud.',
           });
         }
       }
@@ -219,24 +215,19 @@ export function Dashboard() {
     setProgrammingSessions([]);
   };
 
-  const handleCreateNewRecord = async () => {
+  const handleCreateNewRecord = () => {
     // Explicitly save the current work as a draft before resetting
     if (user && courseInfo.course_code && courseInfo.course_title) {
-      try {
-        await saveToHistory(
-          currentRecordId,
-          courseInfo,
-          theoryExperiments,
-          programmingSessions,
-          'draft',
-          user.uid
-        );
-        toast.success('Current record saved as draft!', {
-          description: 'You can find it in your History later.',
-        });
-      } catch (err: any) {
-        toast.error(`Failed to save draft: ${err.message || 'Unknown error'}`);
-      }
+      saveDraftLocally(
+        currentRecordId,
+        courseInfo,
+        theoryExperiments,
+        programmingSessions,
+        user.uid
+      );
+      toast.success('Current record saved as draft!', {
+        description: 'You can find it in your History later.',
+      });
     }
     handleReset();
   };
@@ -261,6 +252,10 @@ export function Dashboard() {
         'complete',
         user.uid
       );
+      // Clean up the local draft since it's now completed in the cloud
+      import('../utils/historyManager').then(({ deleteDraftLocally }) => {
+        deleteDraftLocally(currentRecordId);
+      });
       toast.success('✅ Record saved as complete! Starting new record...');
       // Reset and start a new record after a short delay
       setTimeout(() => {

@@ -9,6 +9,8 @@ import {
   getAllPublicRecords,
   subscribeToUserHistory,
   subscribeToPublicRecords,
+  getDraftsLocally,
+  deleteDraftLocally
 } from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -55,15 +57,19 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
 
   const [liveIndicator, setLiveIndicator] = useState(false);
 
-  // Real-time listener for user's own records
+  // Real-time listener for user's own records (completed only)
   useEffect(() => {
     const unsub = subscribeToUserHistory(userId, (allRecords) => {
-      setDraftRecords(allRecords.filter(r => r.status === 'draft'));
       setCompletedRecords(allRecords.filter(r => r.status === 'complete'));
       // Shared by others = complete + isShared + not mine
       setSharedRecords(allRecords.filter(r => r.status === 'complete' && r.isShared && r.userId !== userId));
     });
     return unsub;
+  }, [userId]);
+
+  // Load local drafts on mount
+  useEffect(() => {
+    setDraftRecords(getDraftsLocally(userId));
   }, [userId]);
 
   // Real-time listener for public community records
@@ -112,8 +118,14 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
     });
 
     deletionTimeoutRef.current = setTimeout(async () => {
-      await deleteFromHistory(id);
+      const recordToDelete = draftRecords.find(r => r.id === id) || completedRecords.find(r => r.id === id);
+      if (recordToDelete?.status === 'draft') {
+        deleteDraftLocally(id);
+      } else {
+        await deleteFromHistory(id);
+      }
       setPendingDeletion(null);
+      setDraftRecords(getDraftsLocally(userId)); // Refresh local drafts
       await loadHistory();
       toast.success('Record permanently deleted');
     }, 10000);
