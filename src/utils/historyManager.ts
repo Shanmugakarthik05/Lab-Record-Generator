@@ -24,17 +24,15 @@ const RECORDS_COLLECTION = 'records';
 const USERS_COLLECTION = 'users';
 
 export async function saveToHistory(
+  recordId: string,
   courseInfo: CourseInfo,
   theoryExperiments: TheoryExperiment[],
   programmingSessions: ProgrammingSession[],
   status: 'draft' | 'complete',
   userId: string
 ): Promise<void> {
-  // Create a unique ID based on course code and timestamp
-  const id = `${courseInfo.course_code}_${Date.now()}`;
-  
   const record: SavedRecord = {
-    id,
+    id: recordId,
     userId,
     courseInfo,
     theoryExperiments,
@@ -45,36 +43,7 @@ export async function saveToHistory(
     sharedBy: status === 'complete' ? courseInfo.student_name : undefined,
   };
   
-  // Try to find an existing record with the same course code/title for this user
-  const q = query(
-    collection(db, RECORDS_COLLECTION),
-    where('userId', '==', userId),
-    where('courseInfo.course_code', '==', courseInfo.course_code),
-    where('courseInfo.course_title', '==', courseInfo.course_title)
-  );
-
-  const querySnapshot = await getDocs(q);
-  
-  let recordToUpdateId = id;
-  if (!querySnapshot.empty) {
-    const existingDraft = querySnapshot.docs.find(d => d.data().status === 'draft');
-    const existingComplete = querySnapshot.docs.find(d => d.data().status === 'complete');
-    
-    if (status === 'complete') {
-      if (existingDraft) await deleteDoc(doc(db, RECORDS_COLLECTION, existingDraft.id));
-      if (existingComplete) {
-        recordToUpdateId = existingComplete.id;
-        record.id = recordToUpdateId;
-      }
-    } else {
-      if (existingDraft) {
-        recordToUpdateId = existingDraft.id;
-        record.id = recordToUpdateId;
-      }
-    }
-  }
-
-  await setDoc(doc(db, RECORDS_COLLECTION, recordToUpdateId), record);
+  await setDoc(doc(db, RECORDS_COLLECTION, recordId), record);
 }
 
 export async function getHistory(): Promise<SavedRecord[]> {

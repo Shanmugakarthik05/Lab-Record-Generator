@@ -29,6 +29,7 @@ export function Dashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'main' | 'history'>('main');
+  const [currentRecordId, setCurrentRecordId] = useState<string>(() => `rec_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
   const [step, setStep] = useState<number>(1);
   const [courseInfo, setCourseInfo] = useState<CourseInfo>({
     record_type: '',
@@ -102,17 +103,18 @@ export function Dashboard() {
     if (user && step >= 2 && courseInfo.course_code && courseInfo.course_title) {
       const timer = setTimeout(() => {
         saveToHistory(
+          currentRecordId,
           courseInfo,
           theoryExperiments,
           programmingSessions,
           'draft',
           user.uid
-        );
+        ).catch(err => console.error("Auto-draft save failed:", err));
       }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [user, courseInfo, theoryExperiments, programmingSessions, step]);
+  }, [user, courseInfo, theoryExperiments, programmingSessions, step, currentRecordId]);
 
   // Save on page unload or network reconnect/disconnect
   useEffect(() => {
@@ -121,24 +123,26 @@ export function Dashboard() {
     const handleBeforeUnload = () => {
       if (courseInfo.course_code && courseInfo.course_title) {
         saveToHistory(
+          currentRecordId,
           courseInfo,
           theoryExperiments,
           programmingSessions,
           'draft',
           user.uid
-        );
+        ).catch(() => {});
       }
     };
 
     const handleNetworkChange = () => {
       if (courseInfo.course_code && courseInfo.course_title) {
         saveToHistory(
+          currentRecordId,
           courseInfo,
           theoryExperiments,
           programmingSessions,
           'draft',
           user.uid
-        );
+        ).catch(() => {});
         if (!navigator.onLine) {
           toast.warning('Network connection lost', {
             description: 'Your record has been safely auto-drafted to your device.',
@@ -193,6 +197,7 @@ export function Dashboard() {
 
   const handleReset = async () => {
     const savedStudentInfo = user ? await getStudentInfo(user.uid) : null;
+    setCurrentRecordId(`rec_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
     setStep(1);
     setCourseInfo({
       record_type: '',
@@ -214,13 +219,14 @@ export function Dashboard() {
   const handleCreateNewRecord = async () => {
     // Explicitly save the current work as a draft before resetting
     if (user && courseInfo.course_code && courseInfo.course_title) {
-      saveToHistory(
+      await saveToHistory(
+        currentRecordId,
         courseInfo,
         theoryExperiments,
         programmingSessions,
         'draft',
         user.uid
-      );
+      ).catch(() => {});
       toast.success('Current record saved as draft!', {
         description: 'You can find it in your History later.',
       });
@@ -229,6 +235,7 @@ export function Dashboard() {
   };
 
   const handleLoadRecord = (record: SavedRecord) => {
+    setCurrentRecordId(record.id);
     setCourseInfo(record.courseInfo);
     setTheoryExperiments(record.theoryExperiments);
     setProgrammingSessions(record.programmingSessions);
@@ -236,20 +243,26 @@ export function Dashboard() {
     setViewMode('main');
   };
 
-  const handleSaveComplete = () => {
+  const handleSaveComplete = async () => {
     if (!user) return;
-    saveToHistory(
-      courseInfo,
-      theoryExperiments,
-      programmingSessions,
-      'complete',
-      user.uid
-    );
-    toast.success('✅ Record saved as complete! Starting new record...');
-    // Reset and start a new record after a short delay
-    setTimeout(() => {
-      handleReset();
-    }, 1000);
+    try {
+      await saveToHistory(
+        currentRecordId,
+        courseInfo,
+        theoryExperiments,
+        programmingSessions,
+        'complete',
+        user.uid
+      );
+      toast.success('✅ Record saved as complete! Starting new record...');
+      // Reset and start a new record after a short delay
+      setTimeout(() => {
+        handleReset();
+      }, 1000);
+    } catch (error) {
+      console.error("Save complete failed:", error);
+      toast.error('Failed to save record.');
+    }
   };
 
   if (!user) {
