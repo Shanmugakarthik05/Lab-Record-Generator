@@ -212,7 +212,27 @@ export function DocumentPreview({ courseInfo, theoryExperiments, programmingSess
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div>Name: {courseInfo.student_name}</div>
-              <div className="mt-2 flex items-center gap-2">Date: <input type="text" placeholder="DD/MM/YYYY" className="border-b border-black outline-none w-36 px-1 text-sm" /></div>
+              <div className="mt-2 flex items-center gap-2 flex-wrap">
+                <span>Date:</span>
+                <select defaultValue="" className="border-b border-black outline-none bg-transparent text-sm px-1" style={{ minWidth: 44 }}>
+                  <option value="" disabled>DD</option>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map(n => (
+                    <option key={n} value={n}>{String(n).padStart(2, '0')}</option>
+                  ))}
+                </select>
+                <select defaultValue="" className="border-b border-black outline-none bg-transparent text-sm px-1">
+                  <option value="" disabled>Month</option>
+                  {['January','February','March','April','May','June','July','August','September','October','November','December'].map((mo, i) => (
+                    <option key={i} value={i + 1}>{mo}</option>
+                  ))}
+                </select>
+                <select defaultValue="" className="border-b border-black outline-none bg-transparent text-sm px-1" style={{ minWidth: 60 }}>
+                  <option value="" disabled>YYYY</option>
+                  {Array.from({ length: 6 }, (_, i) => new Date().getFullYear() - 2 + i).map(y => (
+                    <option key={y} value={y}>{y}</option>
+                  ))}
+                </select>
+              </div>
             </div>
             <div>
               <div>Register Number: {courseInfo.register_number}</div>

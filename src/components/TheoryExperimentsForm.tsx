@@ -3,6 +3,7 @@ import { TheoryExperiment } from '../App';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
+import { DateSelect } from './DateSelect';
 import { Plus, Trash2, ArrowUp, ArrowDown, GripVertical, Copy, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -178,11 +179,10 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
               <div>
                 <Label htmlFor={`date-${index}`}>Date</Label>
                 <div className="flex gap-1">
-                  <Input
+                  <DateSelect
                     id={`date-${index}`}
-                    type="date"
                     value={exp.date}
-                    onChange={(e) => updateExperiment(index, 'date', e.target.value)}
+                    onChange={(val) => updateExperiment(index, 'date', val)}
                     className="flex-1"
                   />
                   <Button
