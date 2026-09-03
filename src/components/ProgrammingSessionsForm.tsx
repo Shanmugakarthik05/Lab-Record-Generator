@@ -3,7 +3,6 @@ import { ProgrammingSession, SubExperiment } from '../App';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { DateSelect } from './DateSelect';
 import { Plus, Trash2, ArrowUp, ArrowDown, GripVertical, Copy, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -234,10 +233,12 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
                   <div className="md:col-span-4">
                     <Label htmlFor={`sub-date-${sessionIndex}-${subIndex}`} className="text-xs">Date</Label>
                     <div className="flex gap-1">
-                      <DateSelect
+                      <Input
                         id={`sub-date-${sessionIndex}-${subIndex}`}
+                        type="date"
                         value={subExp.date}
-                        onChange={(val) => updateSubExperiment(sessionIndex, subIndex, 'date', val)}
+                        onChange={(e) => updateSubExperiment(sessionIndex, subIndex, 'date', e.target.value)}
+                        className="h-10 flex-1"
                       />
                       <Button
                         type="button"

@@ -217,13 +217,13 @@ export function LoginPage() {
 
   /* Firebase auth */
   useEffect(() => {
-    getRedirectResult(auth).then(r => { if (r?.user) navigate('/dashboard'); }).catch(() => {});
+    getRedirectResult(auth).then(r => { if (r?.user) navigate('/dashboard'); }).catch(() => { });
     const unsub = onAuthStateChanged(auth, u => { if (u) navigate('/dashboard'); else setCheckingAuth(false); });
     return unsub;
   }, [navigate]);
 
   const err = (msg: string) => { setError(msg); setSuccess(''); };
-  const ok  = (msg: string) => { setSuccess(msg); setError(''); };
+  const ok = (msg: string) => { setSuccess(msg); setError(''); };
 
   const getFriendly = (code: string) => ({
     'auth/user-not-found': 'No account with this email.',
