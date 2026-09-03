@@ -1,202 +1,173 @@
 import { CourseInfo, TheoryExperiment, ProgrammingSession } from '../App';
+import { db } from './firebase/config';
+import { collection, doc, setDoc, getDoc, getDocs, query, where, deleteDoc } from 'firebase/firestore';
 
 export interface SavedRecord {
   id: string;
-  userId: string; // Add user ID to identify record owner
+  userId: string;
   courseInfo: CourseInfo;
   theoryExperiments: TheoryExperiment[];
   programmingSessions: ProgrammingSession[];
   savedAt: string;
   status: 'draft' | 'complete';
-  isShared?: boolean; // Add flag to mark if record is shared
-  sharedBy?: string; // Store the name of user who shared it
+  isShared?: boolean;
+  sharedBy?: string;
 }
 
 export interface StudentInfo {
   student_name: string;
   register_number: string;
-  userId: string; // Add user ID to identify student info owner
+  userId: string;
 }
 
-const HISTORY_KEY = 'lab_records_history';
-const STUDENT_INFO_KEY = 'student_info';
+const RECORDS_COLLECTION = 'records';
+const USERS_COLLECTION = 'users';
 
-export function saveToHistory(
+export async function saveToHistory(
   courseInfo: CourseInfo,
   theoryExperiments: TheoryExperiment[],
   programmingSessions: ProgrammingSession[],
   status: 'draft' | 'complete',
-  userId: string // Add userId parameter
-): void {
-  const history = getHistory();
-  
+  userId: string
+): Promise<void> {
   // Create a unique ID based on course code and timestamp
   const id = `${courseInfo.course_code}_${Date.now()}`;
   
   const record: SavedRecord = {
     id,
-    userId, // Store the user ID with the record
+    userId,
     courseInfo,
     theoryExperiments,
     programmingSessions,
     savedAt: new Date().toISOString(),
     status,
-    // Auto-share to community when status is 'complete'
     isShared: status === 'complete',
     sharedBy: status === 'complete' ? courseInfo.student_name : undefined,
   };
   
-  // Check if there's already a draft for this course by this user
-  const existingDraftIndex = history.findIndex(
-    (r) => 
-      r.userId === userId && // Check user ID
-      r.courseInfo.course_code === courseInfo.course_code &&
-      r.courseInfo.course_title === courseInfo.course_title &&
-      r.status === 'draft'
+  // Try to find an existing record with the same course code/title for this user
+  const q = query(
+    collection(db, RECORDS_COLLECTION),
+    where('userId', '==', userId),
+    where('courseInfo.course_code', '==', courseInfo.course_code),
+    where('courseInfo.course_title', '==', courseInfo.course_title)
   );
+
+  const querySnapshot = await getDocs(q);
   
-  if (status === 'complete') {
-    // If saving as complete, remove any existing draft for this course
-    if (existingDraftIndex !== -1) {
-      history.splice(existingDraftIndex, 1);
-    }
+  let recordToUpdateId = id;
+  if (!querySnapshot.empty) {
+    const existingDraft = querySnapshot.docs.find(d => d.data().status === 'draft');
+    const existingComplete = querySnapshot.docs.find(d => d.data().status === 'complete');
     
-    // Check if there's already a completed record for this course by this user
-    const existingCompleteIndex = history.findIndex(
-      (r) => 
-        r.userId === userId && // Check user ID
-        r.courseInfo.course_code === courseInfo.course_code &&
-        r.courseInfo.course_title === courseInfo.course_title &&
-        r.status === 'complete'
-    );
-    
-    if (existingCompleteIndex !== -1) {
-      // Replace the existing completed record with the new one
-      history[existingCompleteIndex] = record;
+    if (status === 'complete') {
+      if (existingDraft) await deleteDoc(doc(db, RECORDS_COLLECTION, existingDraft.id));
+      if (existingComplete) {
+        recordToUpdateId = existingComplete.id;
+        record.id = recordToUpdateId;
+      }
     } else {
-      // Add new completed record
-      history.unshift(record);
+      if (existingDraft) {
+        recordToUpdateId = existingDraft.id;
+        record.id = recordToUpdateId;
+      }
     }
-  } else if (existingDraftIndex !== -1) {
-    // Update existing draft
-    history[existingDraftIndex] = { ...record, id: history[existingDraftIndex].id };
-  } else {
-    // Add new draft record
-    history.unshift(record);
   }
-  
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+
+  await setDoc(doc(db, RECORDS_COLLECTION, recordToUpdateId), record);
 }
 
-export function getHistory(): SavedRecord[] {
-  try {
-    const history = localStorage.getItem(HISTORY_KEY);
-    return history ? JSON.parse(history) : [];
-  } catch (error) {
-    console.error('Error loading history:', error);
-    return [];
+export async function getHistory(): Promise<SavedRecord[]> {
+  const querySnapshot = await getDocs(collection(db, RECORDS_COLLECTION));
+  return querySnapshot.docs.map(doc => doc.data() as SavedRecord);
+}
+
+export async function getUserHistory(userId: string): Promise<SavedRecord[]> {
+  const q = query(collection(db, RECORDS_COLLECTION), where('userId', '==', userId));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data() as SavedRecord).sort((a, b) => new Date(b.savedAt).getTime() - new Date(a.savedAt).getTime());
+}
+
+export async function getDraftRecords(userId: string): Promise<SavedRecord[]> {
+  const history = await getUserHistory(userId);
+  return history.filter(record => record.status === 'draft');
+}
+
+export async function getCompletedRecords(userId: string): Promise<SavedRecord[]> {
+  const history = await getUserHistory(userId);
+  return history.filter(record => record.status === 'complete');
+}
+
+export async function deleteFromHistory(id: string): Promise<void> {
+  await deleteDoc(doc(db, RECORDS_COLLECTION, id));
+}
+
+export async function getRecordById(id: string): Promise<SavedRecord | null> {
+  const docRef = doc(db, RECORDS_COLLECTION, id);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return docSnap.data() as SavedRecord;
   }
+  return null;
 }
 
-// Get records for a specific user
-export function getUserHistory(userId: string): SavedRecord[] {
-  return getHistory().filter(record => record.userId === userId);
+export async function saveStudentInfo(studentInfo: StudentInfo): Promise<void> {
+  await setDoc(doc(db, USERS_COLLECTION, studentInfo.userId), studentInfo);
 }
 
-export function getDraftRecords(userId: string): SavedRecord[] {
-  return getUserHistory(userId).filter(record => record.status === 'draft');
-}
-
-export function getCompletedRecords(userId: string): SavedRecord[] {
-  return getUserHistory(userId).filter(record => record.status === 'complete');
-}
-
-export function deleteFromHistory(id: string): void {
-  const history = getHistory();
-  const updatedHistory = history.filter((record) => record.id !== id);
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(updatedHistory));
-}
-
-export function getRecordById(id: string): SavedRecord | null {
-  const history = getHistory();
-  return history.find((record) => record.id === id) || null;
-}
-
-export function saveStudentInfo(studentInfo: StudentInfo): void {
-  localStorage.setItem(STUDENT_INFO_KEY, JSON.stringify(studentInfo));
-}
-
-export function getStudentInfo(userId: string): StudentInfo | null {
-  try {
-    const info = localStorage.getItem(STUDENT_INFO_KEY);
-    if (!info) return null;
-    
-    const parsedInfo = JSON.parse(info);
-    
-    // Return student info only if it belongs to the current user
-    if (parsedInfo.userId === userId) {
-      return parsedInfo;
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error loading student info:', error);
-    return null;
+export async function getStudentInfo(userId: string): Promise<StudentInfo | null> {
+  const docRef = doc(db, USERS_COLLECTION, userId);
+  const docSnap = await getDoc(docRef);
+  if (docSnap.exists()) {
+    return docSnap.data() as StudentInfo;
   }
+  return null;
 }
 
-export function clearStudentInfo(): void {
-  localStorage.removeItem(STUDENT_INFO_KEY);
+export async function clearStudentInfo(userId: string): Promise<void> {
+  await deleteDoc(doc(db, USERS_COLLECTION, userId));
 }
 
-// Get all shared/public records (excluding the current user's records)
-export function getSharedRecords(currentUserId: string): SavedRecord[] {
-  return getHistory().filter(
-    record => 
-      record.status === 'complete' && 
-      record.isShared === true && 
-      record.userId !== currentUserId
+export async function getSharedRecords(currentUserId: string): Promise<SavedRecord[]> {
+  const q = query(
+    collection(db, RECORDS_COLLECTION),
+    where('status', '==', 'complete'),
+    where('isShared', '==', true)
   );
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs
+    .map(doc => doc.data() as SavedRecord)
+    .filter(record => record.userId !== currentUserId);
 }
 
-// Toggle share status of a record
-export function toggleShareRecord(recordId: string, userName: string): boolean {
-  const history = getHistory();
-  const recordIndex = history.findIndex(r => r.id === recordId);
+export async function toggleShareRecord(recordId: string, userName: string): Promise<boolean> {
+  const record = await getRecordById(recordId);
+  if (!record) return false;
   
-  if (recordIndex === -1) return false;
+  record.isShared = !record.isShared;
+  record.sharedBy = record.isShared ? userName : undefined;
   
-  const record = history[recordIndex];
-  
-  // Toggle share status
-  history[recordIndex] = {
-    ...record,
-    isShared: !record.isShared,
-    sharedBy: !record.isShared ? userName : undefined,
-  };
-  
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
-  return history[recordIndex].isShared || false;
+  await setDoc(doc(db, RECORDS_COLLECTION, recordId), record);
+  return record.isShared;
 }
 
-// Check if a record is shared
-export function isRecordShared(recordId: string): boolean {
-  const record = getRecordById(recordId);
+export async function isRecordShared(recordId: string): Promise<boolean> {
+  const record = await getRecordById(recordId);
   return record?.isShared === true;
 }
 
-// Get all public/shared records from all users (for community view)
-export function getAllPublicRecords(): SavedRecord[] {
-  return getHistory().filter(
-    record => 
-      record.status === 'complete' && 
-      record.isShared === true
+export async function getAllPublicRecords(): Promise<SavedRecord[]> {
+  const q = query(
+    collection(db, RECORDS_COLLECTION),
+    where('status', '==', 'complete'),
+    where('isShared', '==', true)
   );
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => doc.data() as SavedRecord);
 }
 
-// Get public records grouped by course code
-export function getPublicRecordsByCategory(): Record<string, SavedRecord[]> {
-  const publicRecords = getAllPublicRecords();
+export async function getPublicRecordsByCategory(): Promise<Record<string, SavedRecord[]>> {
+  const publicRecords = await getAllPublicRecords();
   const grouped: Record<string, SavedRecord[]> = {};
   
   publicRecords.forEach(record => {
@@ -210,9 +181,8 @@ export function getPublicRecordsByCategory(): Record<string, SavedRecord[]> {
   return grouped;
 }
 
-// Get public records grouped by department
-export function getPublicRecordsByDepartment(): Record<string, SavedRecord[]> {
-  const publicRecords = getAllPublicRecords();
+export async function getPublicRecordsByDepartment(): Promise<Record<string, SavedRecord[]>> {
+  const publicRecords = await getAllPublicRecords();
   const grouped: Record<string, SavedRecord[]> = {};
   
   publicRecords.forEach(record => {
@@ -226,9 +196,8 @@ export function getPublicRecordsByDepartment(): Record<string, SavedRecord[]> {
   return grouped;
 }
 
-// Get public records grouped by record type
-export function getPublicRecordsByType(): Record<string, SavedRecord[]> {
-  const publicRecords = getAllPublicRecords();
+export async function getPublicRecordsByType(): Promise<Record<string, SavedRecord[]>> {
+  const publicRecords = await getAllPublicRecords();
   const grouped: Record<string, SavedRecord[]> = {};
   
   publicRecords.forEach(record => {

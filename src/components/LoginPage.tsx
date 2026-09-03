@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../utils/supabase/client';
+import { auth, googleProvider } from '../utils/firebase/config';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -141,23 +142,9 @@ export function LoginPage() {
         throw new Error('Please fill in all fields');
       }
 
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password: loginPassword,
-      });
+      const userCredential = await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
 
-      if (error) {
-        // Handle specific error cases
-        if (error.message.includes('Email not confirmed')) {
-          throw new Error('Please verify your email address. Check your inbox for the confirmation link.');
-        }
-        if (error.message.includes('Invalid login credentials')) {
-          throw new Error('Invalid email or password. Please check your credentials and try again.');
-        }
-        throw error;
-      }
-
-      if (data.user) {
+      if (userCredential.user) {
         navigate('/dashboard');
       }
     } catch (err: any) {
@@ -200,34 +187,14 @@ export function LoginPage() {
         );
       }
 
-      const { data, error } = await supabase.auth.signUp({
-        email: signupEmail,
-        password: signupPassword,
-        options: {
-          data: {
-            full_name: signupName,
-            name: signupName,
-          },
-          emailRedirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data.user) {
-        // Check if email confirmation is required
-        if (data.user.identities && data.user.identities.length === 0) {
-          setSuccess('Account already exists. Please sign in instead.');
-        } else if (data.session) {
-          // User is automatically signed in (email confirmation disabled)
-          setSuccess('Account created successfully! Redirecting...');
-          setTimeout(() => navigate('/dashboard'), 1500);
-        } else {
-          // Email confirmation required
-          setSuccess('Account created! Please check your email to verify your account before signing in.');
-        }
+      const userCredential = await createUserWithEmailAndPassword(auth, signupEmail, signupPassword);
+      
+      if (userCredential.user) {
+        await updateProfile(userCredential.user, { displayName: signupName });
+        
+        setSuccess('Account created successfully! Redirecting...');
+        setTimeout(() => navigate('/dashboard'), 1500);
+        
         // Clear signup form
         setSignupEmail('');
         setSignupPassword('');
@@ -248,18 +215,9 @@ export function LoginPage() {
       setError(null);
       setSuccess(null);
 
-      const { data, error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/dashboard`,
-        },
-      });
+      const userCredential = await signInWithPopup(auth, googleProvider);
 
-      if (error) {
-        throw error;
-      }
-
-      if (data.user) {
+      if (userCredential.user) {
         navigate('/dashboard');
       }
     } catch (err: any) {
@@ -279,19 +237,11 @@ export function LoginPage() {
         throw new Error('Please enter your email address');
       }
 
-      const { data, error } = await supabase.auth.resetPasswordForEmail(resetEmail, {
-        redirectTo: `${window.location.origin}/dashboard`,
-      });
+      await sendPasswordResetEmail(auth, resetEmail);
 
-      if (error) {
-        throw error;
-      }
-
-      if (data) {
-        setSuccess('Password reset email sent! Please check your inbox.');
-        setShowForgotPassword(false);
-        setResetEmail('');
-      }
+      setSuccess('Password reset email sent! Please check your inbox.');
+      setShowForgotPassword(false);
+      setResetEmail('');
     } catch (err: any) {
       console.error('Forgot password error:', err);
       setError(err.message || 'Failed to send password reset email. Please try again.');
@@ -688,7 +638,7 @@ export function LoginPage() {
             <div>
               <p className="font-semibold text-gray-800 mb-1">Secure Authentication</p>
               <p className="text-xs leading-relaxed">
-                Your credentials are secured by Supabase Auth with industry-standard encryption. You must be signed in to generate or download lab records.
+                Your credentials are secured by Firebase Auth with industry-standard encryption. You must be signed in to generate or download lab records.
               </p>
             </div>
           </div>

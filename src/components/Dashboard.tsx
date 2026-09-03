@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '../utils/supabase/client';
+import { auth } from '../utils/firebase/config';
+import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { RecordTypeSelector } from './RecordTypeSelector';
 import { CourseInfoForm } from './CourseInfoForm';
 import { TheoryExperimentsForm } from './TheoryExperimentsForm';
@@ -50,39 +51,38 @@ export function Dashboard() {
     checkUser();
 
     // Listen for auth state changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        setUser(firebaseUser);
       } else {
         navigate('/');
       }
     });
 
     return () => {
-      subscription.unsubscribe();
+      unsubscribe();
     };
   }, [navigate]);
 
   const checkUser = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (session?.user) {
-      setUser(session.user);
-    } else {
-      navigate('/');
+    const currentUser = auth.currentUser;
+    if (currentUser) {
+      setUser(currentUser);
     }
   };
 
   // Load student info when user is set
   useEffect(() => {
     if (user) {
-      const savedStudentInfo = getStudentInfo(user.id);
-      if (savedStudentInfo) {
-        setCourseInfo(prev => ({
-          ...prev,
-          student_name: savedStudentInfo.student_name,
-          register_number: savedStudentInfo.register_number,
-        }));
-      }
+      getStudentInfo(user.id).then((savedStudentInfo) => {
+        if (savedStudentInfo) {
+          setCourseInfo(prev => ({
+            ...prev,
+            student_name: savedStudentInfo.student_name,
+            register_number: savedStudentInfo.register_number,
+          }));
+        }
+      });
     }
   }, [user]);
 
@@ -152,7 +152,7 @@ export function Dashboard() {
   }, [user, courseInfo, theoryExperiments, programmingSessions, step]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut(auth);
     navigate('/');
   };
 
@@ -180,8 +180,8 @@ export function Dashboard() {
     if (step > 1) setStep(step - 1);
   };
 
-  const handleReset = () => {
-    const savedStudentInfo = user ? getStudentInfo(user.id) : null;
+  const handleReset = async () => {
+    const savedStudentInfo = user ? await getStudentInfo(user.id) : null;
     setStep(1);
     setCourseInfo({
       record_type: '',
@@ -229,8 +229,7 @@ export function Dashboard() {
   }
 
   const getUserDisplayName = () => {
-    if (user.user_metadata?.full_name) return user.user_metadata.full_name;
-    if (user.user_metadata?.name) return user.user_metadata.name;
+    if (user.displayName) return user.displayName;
     return user.email?.split('@')[0] || 'User';
   };
 
@@ -261,7 +260,7 @@ export function Dashboard() {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                     <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.user_metadata?.avatar_url} alt={getUserDisplayName()} />
+                      <AvatarImage src={user.photoURL} alt={getUserDisplayName()} />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
                         {getUserInitials()}
                       </AvatarFallback>

@@ -12,13 +12,30 @@ export function PublicRecordViewer() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (recordId) {
-      const foundRecord = getRecordById(recordId);
-      if (foundRecord && foundRecord.isShared) {
-        setRecord(foundRecord);
+    let isMounted = true;
+    
+    const loadRecord = async () => {
+      if (recordId) {
+        try {
+          const foundRecord = await getRecordById(recordId);
+          if (isMounted) {
+            if (foundRecord && foundRecord.isShared) {
+              setRecord(foundRecord);
+            }
+          }
+        } catch (error) {
+          console.error("Error loading record:", error);
+        } finally {
+          if (isMounted) setLoading(false);
+        }
       }
-      setLoading(false);
-    }
+    };
+    
+    loadRecord();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [recordId]);
 
   if (loading) {

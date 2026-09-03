@@ -7,8 +7,7 @@ import { ArrowLeft, Loader2, AlertCircle, Share2 } from 'lucide-react';
 import { Alert, AlertDescription } from './ui/alert';
 import { Toaster } from './ui/sonner';
 import type { CourseInfo, TheoryExperiment, ProgrammingSession } from '../App';
-import { projectId, publicAnonKey } from '../utils/supabase/info';
-
+import { getRecordById } from '../utils/historyManager';
 export function RecordViewer() {
   const { recordId } = useParams<{ recordId: string }>();
   const navigate = useNavigate();
@@ -33,26 +32,13 @@ export function RecordViewer() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/make-server-c614a86f/shared-record/${id}`,
-        {
-          headers: {
-            'Authorization': `Bearer ${publicAnonKey}`,
-          },
-        }
-      );
+      const foundRecord = await getRecordById(id);
 
-      if (!response.ok) {
+      if (!foundRecord || !foundRecord.isShared) {
         throw new Error('Record not found or has been removed');
       }
 
-      const data = await response.json();
-      
-      if (data.record) {
-        setRecordData(data.record);
-      } else {
-        throw new Error('Invalid record data');
-      }
+      setRecordData(foundRecord);
     } catch (err: any) {
       console.error('Error fetching shared record:', err);
       setError(err.message || 'Failed to load shared record');

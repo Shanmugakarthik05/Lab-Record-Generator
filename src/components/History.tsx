@@ -6,10 +6,7 @@ import {
   SavedRecord, 
   getSharedRecords, 
   toggleShareRecord,
-  getAllPublicRecords,
-  getPublicRecordsByCategory,
-  getPublicRecordsByDepartment,
-  getPublicRecordsByType
+  getAllPublicRecords
 } from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -54,11 +51,11 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
   const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
   const deletionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const loadHistory = () => {
-    setDraftRecords(getDraftRecords(userId));
-    setCompletedRecords(getCompletedRecords(userId));
-    setSharedRecords(getSharedRecords(userId));
-    setPublicRecords(getAllPublicRecords());
+  const loadHistory = async () => {
+    setDraftRecords(await getDraftRecords(userId));
+    setCompletedRecords(await getCompletedRecords(userId));
+    setSharedRecords(await getSharedRecords(userId));
+    setPublicRecords(await getAllPublicRecords());
   };
 
   useEffect(() => {
@@ -90,10 +87,10 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
       },
     });
 
-    deletionTimeoutRef.current = setTimeout(() => {
-      deleteFromHistory(id);
+    deletionTimeoutRef.current = setTimeout(async () => {
+      await deleteFromHistory(id);
       setPendingDeletion(null);
-      loadHistory();
+      await loadHistory();
       toast.success('Record permanently deleted');
     }, 10000);
   };
@@ -117,9 +114,9 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
     onClose();
   };
 
-  const handleShareToggle = (recordId: string) => {
-    const isShared = toggleShareRecord(recordId, userName);
-    loadHistory();
+  const handleShareToggle = async (recordId: string) => {
+    const isShared = await toggleShareRecord(recordId, userName);
+    await loadHistory();
     if (isShared) {
       toast.success('Record shared successfully', {
         description: 'Other users can now view and use this record',
@@ -173,13 +170,25 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
     
     switch (categoryView) {
       case 'course':
-        groupedRecords = getPublicRecordsByCategory();
+        publicRecords.forEach(record => {
+          const courseCode = record.courseInfo.course_code;
+          if (!groupedRecords[courseCode]) groupedRecords[courseCode] = [];
+          groupedRecords[courseCode].push(record);
+        });
         break;
       case 'department':
-        groupedRecords = getPublicRecordsByDepartment();
+        publicRecords.forEach(record => {
+          const department = record.courseInfo.department;
+          if (!groupedRecords[department]) groupedRecords[department] = [];
+          groupedRecords[department].push(record);
+        });
         break;
       case 'type':
-        groupedRecords = getPublicRecordsByType();
+        publicRecords.forEach(record => {
+          const type = record.courseInfo.record_type;
+          if (!groupedRecords[type]) groupedRecords[type] = [];
+          groupedRecords[type].push(record);
+        });
         break;
     }
 

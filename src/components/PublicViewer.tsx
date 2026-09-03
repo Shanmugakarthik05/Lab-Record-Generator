@@ -17,24 +17,35 @@ export function PublicViewer() {
   const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
-    if (encodedId) {
-      try {
-        // Decode the base64 encoded ID
-        const decodedId = atob(encodedId);
-        const foundRecord = getRecordById(decodedId);
-        
-        if (foundRecord && foundRecord.isShared) {
-          setRecord(foundRecord);
-        } else {
-          setRecord(null);
+    let isMounted = true;
+    
+    const loadRecord = async () => {
+      if (encodedId) {
+        try {
+          const decodedId = atob(encodedId);
+          const foundRecord = await getRecordById(decodedId);
+          
+          if (isMounted) {
+            if (foundRecord && foundRecord.isShared) {
+              setRecord(foundRecord);
+            } else {
+              setRecord(null);
+            }
+          }
+        } catch (error) {
+          console.error('Error loading shared record:', error);
+          if (isMounted) setRecord(null);
+        } finally {
+          if (isMounted) setLoading(false);
         }
-      } catch (error) {
-        console.error('Error loading shared record:', error);
-        setRecord(null);
-      } finally {
-        setLoading(false);
       }
-    }
+    };
+    
+    loadRecord();
+    
+    return () => {
+      isMounted = false;
+    };
   }, [encodedId]);
 
   const handleDownloadPDF = async () => {
