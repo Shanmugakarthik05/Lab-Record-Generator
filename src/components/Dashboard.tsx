@@ -109,7 +109,10 @@ export function Dashboard() {
           programmingSessions,
           'draft',
           user.uid
-        ).catch(err => console.error("Auto-draft save failed:", err));
+        ).catch(err => {
+          console.error("Auto-draft save failed:", err);
+          toast.error(`Auto-save failed: ${err.message || 'Unknown error'}`);
+        });
       }, 1000);
 
       return () => clearTimeout(timer);
@@ -219,17 +222,21 @@ export function Dashboard() {
   const handleCreateNewRecord = async () => {
     // Explicitly save the current work as a draft before resetting
     if (user && courseInfo.course_code && courseInfo.course_title) {
-      await saveToHistory(
-        currentRecordId,
-        courseInfo,
-        theoryExperiments,
-        programmingSessions,
-        'draft',
-        user.uid
-      ).catch(() => {});
-      toast.success('Current record saved as draft!', {
-        description: 'You can find it in your History later.',
-      });
+      try {
+        await saveToHistory(
+          currentRecordId,
+          courseInfo,
+          theoryExperiments,
+          programmingSessions,
+          'draft',
+          user.uid
+        );
+        toast.success('Current record saved as draft!', {
+          description: 'You can find it in your History later.',
+        });
+      } catch (err: any) {
+        toast.error(`Failed to save draft: ${err.message || 'Unknown error'}`);
+      }
     }
     handleReset();
   };
@@ -259,9 +266,9 @@ export function Dashboard() {
       setTimeout(() => {
         handleReset();
       }, 1000);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Save complete failed:", error);
-      toast.error('Failed to save record.');
+      toast.error(`Failed to save record: ${error.message || 'Unknown error'}`);
     }
   };
 
