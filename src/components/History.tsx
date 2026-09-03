@@ -83,6 +83,10 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
   };
 
   useEffect(() => {
+    loadHistory();
+  }, [userId]);
+
+  useEffect(() => {
     return () => {
       if (deletionTimeoutRef.current) {
         clearTimeout(deletionTimeoutRef.current);
