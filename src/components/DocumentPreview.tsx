@@ -212,7 +212,7 @@ export function DocumentPreview({ courseInfo, theoryExperiments, programmingSess
           <div className="grid grid-cols-2 gap-4">
             <div>
               <div>Name: {courseInfo.student_name}</div>
-              <div className="mt-2">Date:</div>
+              <div className="mt-2 flex items-center gap-2">Date: <input type="text" placeholder="DD/MM/YYYY" className="border-b border-black outline-none w-36 px-1 text-sm" /></div>
             </div>
             <div>
               <div>Register Number: {courseInfo.register_number}</div>
