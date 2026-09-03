@@ -114,6 +114,24 @@ export function PublicViewer() {
 
   return (
     <div style={pageStyle}>
+      {/* Incognito tip banner */}
+      <div style={{
+        background: 'linear-gradient(135deg, #f0fdf4, #dcfce7)',
+        borderBottom: '1px solid #bbf7d0',
+        padding: '10px 24px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 10,
+        flexWrap: 'wrap',
+      }}>
+        <span style={{ fontSize: 18 }}>🕵️</span>
+        <p style={{ margin: 0, fontSize: 13, color: '#166534', textAlign: 'center' }}>
+          <strong>Tip:</strong> Want to view another student's shared record without logging in?
+          Open the link in an <strong>Incognito / Private tab</strong> — no account needed!
+        </p>
+      </div>
+
       {/* Header bar */}
       <div style={{ background: '#fff', boxShadow: '0 1px 0 #e5e7eb', position: 'sticky', top: 0, zIndex: 10 }}>
         <div style={{ maxWidth: 960, margin: '0 auto', padding: '14px 24px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, flexWrap: 'wrap' }}>
