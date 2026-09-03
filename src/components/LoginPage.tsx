@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, googleProvider } from '../utils/firebase/config';
-import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithPopup, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signInWithRedirect, getRedirectResult, sendPasswordResetEmail, updateProfile } from 'firebase/auth';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
@@ -27,6 +27,26 @@ export function LoginPage() {
   const [emailSuggestions, setEmailSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [activeField, setActiveField] = useState<'login' | 'signup' | 'reset' | null>(null);
+
+  // Check for redirect result on mount
+  useEffect(() => {
+    const checkRedirect = async () => {
+      try {
+        setLoading(true);
+        const result = await getRedirectResult(auth);
+        if (result?.user) {
+          navigate('/dashboard');
+        }
+      } catch (err: any) {
+        console.error('Redirect result error:', err);
+        setError(err.message || 'Failed to sign in with Google. Please try again.');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    checkRedirect();
+  }, [navigate]);
 
   // Login form state
   const [loginEmail, setLoginEmail] = useState('');
@@ -215,14 +235,10 @@ export function LoginPage() {
       setError(null);
       setSuccess(null);
 
-      const userCredential = await signInWithPopup(auth, googleProvider);
-
-      if (userCredential.user) {
-        navigate('/dashboard');
-      }
+      await signInWithRedirect(auth, googleProvider);
     } catch (err: any) {
       console.error('Google login error:', err);
-      setError(err.message || 'Failed to sign in with Google. Please try again.');
+      setError(err.message || 'Failed to redirect to Google. Please try again.');
       setLoading(false);
     }
   };
