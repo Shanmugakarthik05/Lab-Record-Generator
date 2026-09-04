@@ -95,7 +95,8 @@ export async function saveToHistory(
   theoryExperiments: TheoryExperiment[],
   programmingSessions: ProgrammingSession[],
   status: 'draft' | 'complete',
-  userId: string
+  userId: string,
+  isShared: boolean = false
 ): Promise<void> {
   const record: any = {
     id: recordId,
@@ -105,10 +106,10 @@ export async function saveToHistory(
     programmingSessions,
     savedAt: new Date().toISOString(),
     status,
-    isShared: status === 'complete',
+    isShared,
   };
   
-  if (status === 'complete') {
+  if (isShared) {
     record.sharedBy = courseInfo.student_name;
   }
   

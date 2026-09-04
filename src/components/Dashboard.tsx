@@ -8,6 +8,16 @@ import { TheoryExperimentsForm } from './TheoryExperimentsForm';
 import { ProgrammingSessionsForm } from './ProgrammingSessionsForm';
 import { DocumentPreview } from './DocumentPreview';
 import { DownloadButtons } from './DownloadButtons';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from './ui/alert-dialog';
 import { History } from './History';
 import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut } from 'lucide-react';
 import {
@@ -76,6 +86,8 @@ export function Dashboard() {
       setUser(currentUser);
     }
   };
+
+  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   // Load student info when user is set
   useEffect(() => {
@@ -255,7 +267,11 @@ export function Dashboard() {
     setViewMode('main');
   };
 
-  const handleSaveComplete = async () => {
+  const initiateSaveComplete = () => {
+    setIsShareDialogOpen(true);
+  };
+
+  const handleSaveComplete = async (share: boolean) => {
     if (!user) return;
     try {
       await saveToHistory(
@@ -264,7 +280,8 @@ export function Dashboard() {
         theoryExperiments,
         programmingSessions,
         'complete',
-        user.uid
+        user.uid,
+        share // Pass user's choice to share
       );
       // Clean up the local draft if it existed
       import('../utils/historyManager').then(({ deleteDraftLocally }) => {
@@ -448,12 +465,32 @@ export function Dashboard() {
                       Create New Record
                     </button>
                     <button
-                      onClick={handleSaveComplete}
+                      onClick={initiateSaveComplete}
                       className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                     >
                       Save as Complete
                     </button>
                   </div>
+                  
+                  {/* Share Dialog */}
+                  <AlertDialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>Share with Community?</AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Do you want to share this completed record with the SEC community? Other students will be able to view and use it as a reference.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel onClick={() => handleSaveComplete(false)}>
+                          No, keep private
+                        </AlertDialogCancel>
+                        <AlertDialogAction onClick={() => handleSaveComplete(true)} className="bg-green-600 hover:bg-green-700">
+                          Yes, share it!
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
                   
                   {/* Auto-save indicator */}
                   <p className="text-center text-sm text-gray-500 mt-4">
