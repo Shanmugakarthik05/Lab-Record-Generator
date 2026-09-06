@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { History } from './History';
-import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut } from 'lucide-react';
+import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut, FileSignature, BookOpen, FlaskConical, Wand2, ChevronRight } from 'lucide-react';
 import {
   saveToHistory,
   getStudentInfo,
@@ -358,67 +358,86 @@ export function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div className="flex-1">
-              <div className="flex items-center justify-center gap-3 mb-4">
-                <FileText className="w-12 h-12 text-blue-600" />
-                <h1 className="text-blue-900">Lab Record Generator</h1>
-              </div>
-              <p className="text-gray-600 text-center">
-                Generate professional lab records for Saveetha Engineering College with QR codes and exports
-              </p>
+    <div className="min-h-screen bg-gradient-to-tr from-blue-100 via-indigo-50 to-purple-100 relative overflow-hidden">
+      {/* Decorative blurred background blobs */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 pointer-events-none"></div>
+      <div className="absolute -bottom-8 left-40 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000 pointer-events-none"></div>
+
+      {/* Top Navigation Bar */}
+      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b border-white/40 shadow-sm">
+        <div className="container mx-auto px-4 max-w-6xl h-16 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-2 rounded-xl shadow-md">
+              <FileText className="w-6 h-6 text-white" />
             </div>
-            
-            {/* User Profile in Top Right */}
-            <div className="absolute top-4 right-4">
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={user.photoURL} alt={getUserDisplayName()} />
-                      <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
-                        {getUserInitials()}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56">
-                  <DropdownMenuLabel>
-                    <div className="flex flex-col space-y-1">
-                      <p>{getUserDisplayName()}</p>
-                      <p className="text-xs text-gray-500">{user.email}</p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout} className="text-red-600 cursor-pointer">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+            <div>
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent">
+                Lab Record Generator
+              </h1>
             </div>
           </div>
           
-          {/* History Button */}
-          <div className="flex justify-center mt-4">
+          <div className="flex items-center gap-4">
             <Button
               onClick={() => setViewMode(viewMode === 'main' ? 'history' : 'main')}
               variant="outline"
-              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+              className="hidden sm:flex border-purple-200 text-purple-700 hover:bg-purple-100/50 backdrop-blur-sm transition-all shadow-sm"
             >
               <HistoryIcon className="w-4 h-4 mr-2" />
               {viewMode === 'main' ? 'View History' : 'Back to Generator'}
             </Button>
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-10 w-10 rounded-full border-2 border-white shadow-md hover:shadow-lg transition-all">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={user.photoURL} alt={getUserDisplayName()} />
+                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-medium">
+                      {getUserInitials()}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl border-white/50 bg-white/95 backdrop-blur-xl p-2">
+                <DropdownMenuLabel className="pb-4">
+                  <div className="flex flex-col space-y-1">
+                    <p className="font-semibold text-gray-800">{getUserDisplayName()}</p>
+                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    {studentProfile?.department && (
+                      <span className="mt-2 inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 w-max border border-blue-100">
+                        Dept: {studentProfile.department}
+                      </span>
+                    )}
+                  </div>
+                </DropdownMenuLabel>
+                
+                <div className="sm:hidden mb-2 px-2">
+                  <Button
+                    onClick={() => setViewMode(viewMode === 'main' ? 'history' : 'main')}
+                    variant="secondary"
+                    className="w-full justify-start"
+                  >
+                    <HistoryIcon className="w-4 h-4 mr-2" />
+                    {viewMode === 'main' ? 'History' : 'Generator'}
+                  </Button>
+                </div>
+
+                <DropdownMenuSeparator className="bg-gray-100" />
+                <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer rounded-lg mt-1">
+                  <LogOut className="w-4 h-4 mr-2" />
+                  Sign Out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
+      </nav>
 
+      <div className="container mx-auto px-4 py-8 max-w-5xl relative z-10">
         {/* Main Content or History */}
         {viewMode === 'history' ? (
-          <div className="bg-white rounded-lg shadow-xl p-8">
+          <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-3xl p-6 sm:p-8">
             <History 
               onLoadRecord={handleLoadRecord} 
               onClose={() => setViewMode('main')} 
@@ -429,40 +448,45 @@ export function Dashboard() {
           </div>
         ) : (
           <>
-            {/* Progress Indicator */}
-            <div className="mb-8">
-              <div className="flex items-center justify-center gap-4">
-                {[1, 2, 3, 4].map((s) => (
-                  <div key={s} className="flex items-center">
+            {/* Modern Progress Indicator */}
+            <div className="mb-10 max-w-3xl mx-auto">
+              <div className="flex items-center justify-between relative">
+                <div className="absolute left-0 right-0 top-1/2 h-1 bg-gray-200/60 -z-10 rounded-full transform -translate-y-1/2"></div>
+                <div 
+                  className="absolute left-0 top-1/2 h-1 bg-gradient-to-r from-blue-600 to-purple-600 -z-10 rounded-full transform -translate-y-1/2 transition-all duration-500 ease-out"
+                  style={{ width: `${((step - 1) / 3) * 100}%` }}
+                ></div>
+                
+                {[
+                  { id: 1, label: 'Type', icon: FileSignature },
+                  { id: 2, label: 'Course', icon: BookOpen },
+                  { id: 3, label: 'Details', icon: FlaskConical },
+                  { id: 4, label: 'Generate', icon: Wand2 },
+                ].map((s) => (
+                  <div key={s.id} className="flex flex-col items-center gap-2">
                     <div
-                      className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${
-                        step >= s
-                          ? 'bg-blue-600 text-white'
-                          : 'bg-gray-200 text-gray-500'
+                      className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm ${
+                        step === s.id
+                          ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 scale-110'
+                          : step > s.id
+                          ? 'bg-white text-blue-600 border-2 border-blue-600'
+                          : 'bg-white/80 text-gray-400 border-2 border-gray-100 backdrop-blur-sm'
                       }`}
                     >
-                      {s}
+                      <s.icon className={`w-5 h-5 ${step === s.id ? 'animate-pulse' : ''}`} />
                     </div>
-                    {s < 4 && (
-                      <div
-                        className={`w-12 h-1 ${
-                          step > s ? 'bg-blue-600' : 'bg-gray-200'
-                        }`}
-                      />
-                    )}
+                    <span className={`text-xs font-medium transition-colors ${
+                      step === s.id ? 'text-blue-700' : step > s.id ? 'text-gray-700' : 'text-gray-400'
+                    }`}>
+                      {s.label}
+                    </span>
                   </div>
                 ))}
-              </div>
-              <div className="flex justify-center gap-16 mt-2 text-sm text-gray-600">
-                <span>Type</span>
-                <span>Course Info</span>
-                <span>Experiments</span>
-                <span>Generate</span>
               </div>
             </div>
 
             {/* Step Content */}
-            <div className="bg-white rounded-lg shadow-xl p-8">
+            <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-3xl p-6 sm:p-10 transition-all duration-300">
               {step === 1 && <RecordTypeSelector onSelect={handleRecordTypeSelect} />}
               
               {step === 2 && (
@@ -549,20 +573,20 @@ export function Dashboard() {
         )}
 
         {/* Footer */}
-        <div className="mt-16 mb-8">
-          <div className="bg-gray-50 rounded-lg shadow-sm py-8 px-6">
-            <div className="flex flex-col items-center text-center space-y-3">
-              <GraduationCap className="w-8 h-8 text-gray-500" />
-              <p className="text-gray-600 text-sm">Developed by <span className="font-semibold text-gray-900">SHANMUGAKARTHIK G</span></p>
-              <div className="flex items-center justify-center gap-2 text-gray-500 text-sm">
-                <span>🎓 B. TECH - INFORMATION TECHNOLOGY</span>
-                <span>•</span>
-                <div className="flex items-center gap-1">
-                  <Building2 className="w-4 h-4" />
-                  <span>SAVEETHA ENGINEERING COLLEGE</span>
-                </div>
+        <div className="mt-12 pb-8 flex justify-center">
+          <div className="bg-white/60 backdrop-blur-md border border-white/40 rounded-full py-3 px-8 shadow-sm hover:shadow-md transition-shadow">
+            <div className="flex items-center gap-4 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <GraduationCap className="w-4 h-4 text-purple-600" />
+                <span className="font-medium">B. TECH IT</span>
               </div>
-              <p className="text-gray-400 text-xs mt-2">© 2025 SK TECH. All rights reserved.</p>
+              <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+              <div className="flex items-center gap-2">
+                <Building2 className="w-4 h-4 text-blue-600" />
+                <span className="font-medium">SAVEETHA ENGINEERING COLLEGE</span>
+              </div>
+              <div className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></div>
+              <span className="hidden sm:block text-gray-500 font-medium">By SHANMUGAKARTHIK G</span>
             </div>
           </div>
         </div>
