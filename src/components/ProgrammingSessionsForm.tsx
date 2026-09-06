@@ -179,27 +179,6 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
                     <ArrowDown className="w-3 h-3" />
                   </button>
                 </div>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => moveSessionUp(sessionIndex)}
-                    disabled={sessionIndex === 0}
-                    className="h-6 px-2 text-purple-600 hover:text-purple-700 hover:bg-purple-100 disabled:opacity-30"
-                  >
-                    <ArrowUp className="w-4 h-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => moveSessionDown(sessionIndex)}
-                    disabled={sessionIndex === sessions.length - 1}
-                    className="h-6 px-2 text-purple-600 hover:text-purple-700 hover:bg-purple-100 disabled:opacity-30"
-                  >
-                    <ArrowDown className="w-4 h-4" />
-                  </Button>
-                </div>
                 <GripVertical className="w-4 h-4" style={{ color: isDark ? '#3d4870' : '#9ca3af' }} />
                 <span className="text-sm font-bold" style={{ color: isDark ? '#c4b5fd' : '#7e22ce' }}>
                   Session {session.session_no}
