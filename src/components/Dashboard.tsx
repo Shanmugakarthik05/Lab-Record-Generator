@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { History } from './History';
-import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut, FileSignature, BookOpen, FlaskConical, Wand2, ChevronRight, Sun, Moon, Heart, Sparkles } from 'lucide-react';
+import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut, FileSignature, BookOpen, FlaskConical, Wand2, ChevronRight, Sun, Moon, Heart, Sparkles, Code2 } from 'lucide-react';
 import {
   saveToHistory,
   getStudentInfo,
@@ -583,26 +583,45 @@ export function Dashboard() {
           </>
         )}
 
-        {/* Footer */}
-        <div className="mt-12 pb-8 flex justify-center">
-          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/40 dark:border-white/10 rounded-full py-3 px-8 shadow-sm hover:shadow-md transition-all duration-500">
-            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
-              <div className="flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                <span className="font-medium">B. TECH IT</span>
-              </div>
-              <div className="w-1 h-1 bg-gray-300 dark:bg-slate-700 rounded-full"></div>
-              <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                <span className="font-medium">SAVEETHA ENGINEERING COLLEGE</span>
-              </div>
-              <div className="w-1 h-1 bg-gray-300 dark:bg-slate-700 rounded-full hidden sm:block"></div>
-              <div className="hidden sm:flex items-center gap-2 group cursor-pointer">
-                <span className="text-gray-500 dark:text-gray-400 font-medium group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 dark:group-hover:from-blue-400 dark:group-hover:to-purple-400 transition-all duration-300 relative">
-                  Crafted by <span className="font-bold">SHANMUGAKARTHIK G</span>
-                  <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-500 rounded-full"></div>
+        {/* Creative Developer Credit Footer */}
+        <div className="mt-20 pb-12 flex justify-center w-full">
+          <div className="relative group cursor-pointer">
+            {/* Glowing background effect that expands on hover */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
+            
+            {/* The main card */}
+            <div className="relative flex items-center gap-4 bg-white/80 dark:bg-slate-900/90 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 py-3 px-5 sm:py-4 sm:px-6 rounded-2xl shadow-xl transition-all duration-300 transform group-hover:scale-[1.02]">
+              
+              {/* Left Side: Avatar/Icon */}
+              <div className="relative hidden sm:block">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 p-[1px]">
+                  <div className="w-full h-full bg-white dark:bg-slate-900 rounded-[11px] flex items-center justify-center">
+                    <Sparkles className="w-6 h-6 text-purple-500 group-hover:animate-pulse" />
+                  </div>
+                </div>
+                {/* Ping animation dot */}
+                <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
                 </span>
-                <Sparkles className="w-4 h-4 text-purple-500 opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 rotate-0 group-hover:rotate-12" />
+              </div>
+
+              {/* Right Side: Details */}
+              <div className="flex flex-col">
+                <span className="text-[10px] uppercase tracking-widest font-bold text-gray-500 dark:text-gray-400 mb-0.5 flex items-center gap-1">
+                  <Code2 className="w-3 h-3" /> System Architect
+                </span>
+                <span className="text-lg font-black bg-gradient-to-r from-blue-700 to-purple-700 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent group-hover:from-purple-600 group-hover:to-blue-600 transition-all duration-500">
+                  SHANMUGAKARTHIK G
+                </span>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                    INFORMATION TECHNOLOGY
+                  </span>
+                  <span className="hidden sm:inline text-xs text-gray-400 dark:text-slate-500">
+                    Saveetha Engineering College
+                  </span>
+                </div>
               </div>
             </div>
           </div>
