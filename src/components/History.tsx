@@ -41,9 +41,10 @@ interface HistoryProps {
   onClose: () => void;
   userId: string;
   userName: string;
+  studentProfile?: any;
 }
 
-export function History({ onLoadRecord, onClose, userId, userName }: HistoryProps) {
+export function History({ onLoadRecord, onClose, userId, userName, studentProfile }: HistoryProps) {
   const [draftRecords, setDraftRecords] = useState<SavedRecord[]>([]);
   const [completedRecords, setCompletedRecords] = useState<SavedRecord[]>([]);
   const [sharedRecords, setSharedRecords] = useState<SavedRecord[]>([]);
@@ -56,6 +57,7 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
   const deletionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [liveIndicator, setLiveIndicator] = useState(false);
+  const [filterMyDept, setFilterMyDept] = useState(true);
 
   // Real-time listener for user's own records
   useEffect(() => {
@@ -196,25 +198,30 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
   };
 
   const renderCategorizedRecords = () => {
+    let filteredPublicRecords = publicRecords;
+    if (filterMyDept && studentProfile?.department) {
+      filteredPublicRecords = publicRecords.filter(r => r.courseInfo.department === studentProfile.department);
+    }
+    
     let groupedRecords: Record<string, SavedRecord[]> = {};
     
     switch (categoryView) {
       case 'course':
-        publicRecords.forEach(record => {
+        filteredPublicRecords.forEach(record => {
           const courseCode = record.courseInfo.course_code;
           if (!groupedRecords[courseCode]) groupedRecords[courseCode] = [];
           groupedRecords[courseCode].push(record);
         });
         break;
       case 'department':
-        publicRecords.forEach(record => {
+        filteredPublicRecords.forEach(record => {
           const department = record.courseInfo.department;
           if (!groupedRecords[department]) groupedRecords[department] = [];
           groupedRecords[department].push(record);
         });
         break;
       case 'type':
-        publicRecords.forEach(record => {
+        filteredPublicRecords.forEach(record => {
           const type = record.courseInfo.record_type;
           if (!groupedRecords[type]) groupedRecords[type] = [];
           groupedRecords[type].push(record);
@@ -589,16 +596,30 @@ export function History({ onLoadRecord, onClose, userId, userName }: HistoryProp
                   Explore lab records shared by all users, organized by category
                 </p>
               </div>
-              <Select value={categoryView} onValueChange={(value: any) => setCategoryView(value)}>
-                <SelectTrigger className="w-40">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="course">By Course</SelectItem>
-                  <SelectItem value="department">By Department</SelectItem>
-                  <SelectItem value="type">By Type</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex items-center gap-4">
+                {studentProfile?.department && (
+                  <button
+                    onClick={() => setFilterMyDept(!filterMyDept)}
+                    className={`px-3 py-1.5 text-sm rounded-full font-medium transition-colors ${
+                      filterMyDept 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    My Dept ({studentProfile.department})
+                  </button>
+                )}
+                <Select value={categoryView} onValueChange={(value: any) => setCategoryView(value)}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="course">By Course</SelectItem>
+                    <SelectItem value="department">By Department</SelectItem>
+                    <SelectItem value="type">By Type</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             {renderCategorizedRecords()}

@@ -88,21 +88,67 @@ export function Dashboard() {
   };
 
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
+  const [studentProfile, setStudentProfile] = useState<any>(null);
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    student_name: '',
+    register_number: '',
+    department: '',
+  });
 
   // Load student info when user is set
   useEffect(() => {
     if (user) {
       getStudentInfo(user.uid).then((savedStudentInfo) => {
         if (savedStudentInfo) {
+          setStudentProfile(savedStudentInfo);
           setCourseInfo(prev => ({
             ...prev,
             student_name: savedStudentInfo.student_name,
             register_number: savedStudentInfo.register_number,
+            department: savedStudentInfo.department || '',
           }));
+          setProfileForm({
+            student_name: savedStudentInfo.student_name || '',
+            register_number: savedStudentInfo.register_number || '',
+            department: savedStudentInfo.department || ''
+          });
+          if (!savedStudentInfo.student_name || !savedStudentInfo.register_number || !savedStudentInfo.department) {
+            setShowProfileSetup(true);
+          }
+        } else {
+          setShowProfileSetup(true);
         }
       });
     }
   }, [user]);
+
+  // Handle Profile Setup Save
+  const handleSaveProfile = async () => {
+    if (!profileForm.student_name || !profileForm.register_number || !profileForm.department) {
+      toast.error('Please fill in all fields');
+      return;
+    }
+    
+    if (user) {
+      const updatedProfile = {
+        student_name: profileForm.student_name,
+        register_number: profileForm.register_number,
+        department: profileForm.department,
+        userId: user.uid,
+      };
+      await saveStudentInfo(updatedProfile);
+      setStudentProfile(updatedProfile);
+      setCourseInfo(prev => ({
+        ...prev,
+        student_name: profileForm.student_name,
+        register_number: profileForm.register_number,
+        department: profileForm.department,
+      }));
+      setShowProfileSetup(false);
+      toast.success('Profile saved successfully!');
+    }
+  };
 
   // Auto-save student info whenever name or register number changes
   useEffect(() => {
@@ -110,10 +156,11 @@ export function Dashboard() {
       saveStudentInfo({
         student_name: courseInfo.student_name,
         register_number: courseInfo.register_number,
+        department: courseInfo.department || studentProfile?.department || '',
         userId: user.uid,
       });
     }
-  }, [user, courseInfo.student_name, courseInfo.register_number]);
+  }, [user, courseInfo.student_name, courseInfo.register_number, courseInfo.department]);
 
   // Auto-save draft whenever data changes (after step 2)
   useEffect(() => {
@@ -379,6 +426,7 @@ export function Dashboard() {
               onClose={() => setViewMode('main')} 
               userId={user.uid} 
               userName={getUserDisplayName()}
+              studentProfile={studentProfile}
             />
           </div>
         ) : (
@@ -521,6 +569,64 @@ export function Dashboard() {
           </div>
         </div>
       </div>
+      
+      {/* Profile Setup Dialog */}
+      <AlertDialog open={showProfileSetup} onOpenChange={() => {}}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Complete Your Profile</AlertDialogTitle>
+            <AlertDialogDescription>
+              Please enter your details to set up your profile and enable community features.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Full Name</label>
+              <input 
+                type="text" 
+                className="w-full p-2 border rounded-md"
+                placeholder="e.g. John Doe"
+                value={profileForm.student_name}
+                onChange={e => setProfileForm(p => ({ ...p, student_name: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Register Number</label>
+              <input 
+                type="text" 
+                className="w-full p-2 border rounded-md"
+                placeholder="e.g. 21152012345"
+                value={profileForm.register_number}
+                onChange={e => setProfileForm(p => ({ ...p, register_number: e.target.value }))}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Department</label>
+              <select 
+                className="w-full p-2 border rounded-md bg-white"
+                value={profileForm.department}
+                onChange={e => setProfileForm(p => ({ ...p, department: e.target.value }))}
+              >
+                <option value="">Select Department</option>
+                <option value="IT">IT</option>
+                <option value="CSE">CSE</option>
+                <option value="ECE">ECE</option>
+                <option value="EEE">EEE</option>
+                <option value="MECH">MECH</option>
+                <option value="CIVIL">CIVIL</option>
+                <option value="BME">BME</option>
+                <option value="AIDS">AIDS</option>
+                <option value="AIML">AI&ML</option>
+              </select>
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={handleSaveProfile} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
+              Save Profile
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <Toaster />
     </div>
   );

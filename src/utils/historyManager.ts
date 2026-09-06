@@ -17,6 +17,7 @@ export interface SavedRecord {
 export interface StudentInfo {
   student_name: string;
   register_number: string;
+  department?: string;
   userId: string;
 }
 
@@ -170,7 +171,6 @@ export async function clearStudentInfo(userId: string): Promise<void> {
 export async function getSharedRecords(currentUserId: string): Promise<SavedRecord[]> {
   const q = query(
     collection(db, RECORDS_COLLECTION),
-    where('status', '==', 'complete'),
     where('isShared', '==', true)
   );
   const querySnapshot = await getDocs(q);
@@ -202,7 +202,6 @@ export async function isRecordShared(recordId: string): Promise<boolean> {
 export async function getAllPublicRecords(): Promise<SavedRecord[]> {
   const q = query(
     collection(db, RECORDS_COLLECTION),
-    where('status', '==', 'complete'),
     where('isShared', '==', true)
   );
   const querySnapshot = await getDocs(q);
@@ -296,7 +295,6 @@ export function subscribeToPublicRecords(
 ): () => void {
   const q = query(
     collection(db, RECORDS_COLLECTION),
-    where('status', '==', 'complete'),
     where('isShared', '==', true)
   );
   return onSnapshot(q, (snapshot) => {
