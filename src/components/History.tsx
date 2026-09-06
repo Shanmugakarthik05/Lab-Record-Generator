@@ -57,7 +57,7 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
   const deletionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const [liveIndicator, setLiveIndicator] = useState(false);
-  const [filterMyDept, setFilterMyDept] = useState(true);
+  const [filterMyDept, setFilterMyDept] = useState(false);
 
   // Real-time listener for user's own records
   useEffect(() => {
