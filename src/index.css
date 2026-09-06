@@ -8,56 +8,30 @@
   html, body, #root { min-height: 100vh; height: 100%; margin: 0; }
 }
 
-/* ── ANIMATION UTILITIES ─────────────────────────────────── */
 @layer utilities {
-  .animation-delay-2000 { animation-delay: 2s; }
-  .animation-delay-4000 { animation-delay: 4s; }
+  .animation-delay-2000 {
+    animation-delay: 2s;
+  }
+  .animation-delay-4000 {
+    animation-delay: 4s;
+  }
 }
 
 @keyframes blob {
-  0%   { transform: translate(0px, 0px) scale(1); }
-  33%  { transform: translate(30px, -50px) scale(1.1); }
-  66%  { transform: translate(-20px, 20px) scale(0.9); }
-  100% { transform: translate(0px, 0px) scale(1); }
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
 }
 
-.animate-blob { animation: blob 7s infinite; }
-
-/* ── THEME TRANSITION ────────────────────────────────────── */
-/* Apply transitions to the html element when switching themes */
-html.theme-switching,
-html.theme-switching * {
-  transition:
-    background-color 300ms cubic-bezier(0.4, 0, 0.2, 1),
-    border-color     300ms cubic-bezier(0.4, 0, 0.2, 1),
-    color            300ms cubic-bezier(0.4, 0, 0.2, 1),
-    box-shadow       300ms cubic-bezier(0.4, 0, 0.2, 1),
-    opacity          300ms cubic-bezier(0.4, 0, 0.2, 1) !important;
+.animate-blob {
+  animation: blob 7s infinite;
 }
-
-/* ── TOKEN UTILITY CLASSES ───────────────────────────────── */
-/* These let TSX components say className="th-surface" etc. */
-.th-bg                { background-color: var(--th-bg); }
-.th-surface           { background: var(--th-surface); border: 1px solid var(--th-surface-border); box-shadow: var(--th-surface-shadow); }
-.th-card              { background: var(--th-card-bg); border: 1px solid var(--th-card-border); box-shadow: var(--th-card-shadow); }
-.th-nav               { background: var(--th-nav-bg); border-bottom: 1px solid var(--th-nav-border); box-shadow: var(--th-nav-shadow); }
-.th-text-primary      { color: var(--th-text-primary); }
-.th-text-secondary    { color: var(--th-text-secondary); }
-.th-text-muted        { color: var(--th-text-muted); }
-.th-text-subtle       { color: var(--th-text-subtle); }
-.th-accent-text       { color: var(--th-accent); }
-.th-border            { border-color: var(--th-border); }
-.th-input             { background: var(--th-input-bg); border: 1px solid var(--th-input-border); color: var(--th-text-primary); }
-.th-input:focus       { border-color: var(--th-input-focus); box-shadow: 0 0 0 3px var(--th-accent-glow); outline: none; }
-.th-input::placeholder { color: var(--th-input-placeholder); }
-.th-btn-primary       { background: var(--th-btn-primary-bg); color: var(--th-btn-primary-text); }
-.th-btn-primary:hover { background: var(--th-btn-primary-hover); }
-.th-badge-blue        { background: var(--th-badge-blue-bg); color: var(--th-badge-blue-text); border: 1px solid var(--th-badge-blue-border); }
-.th-badge-purple      { background: var(--th-badge-purple-bg); color: var(--th-badge-purple-text); border: 1px solid var(--th-badge-purple-border); }
-.th-badge-green       { background: var(--th-badge-green-bg); color: var(--th-badge-green-text); border: 1px solid var(--th-badge-green-border); }
-.th-badge-amber       { background: var(--th-badge-amber-bg); color: var(--th-badge-amber-text); border: 1px solid var(--th-badge-amber-border); }
-.th-badge-teal        { background: var(--th-badge-teal-bg); color: var(--th-badge-teal-text); border: 1px solid var(--th-badge-teal-border); }
-.th-modal             { background: var(--th-modal-bg); border: 1px solid var(--th-modal-border); box-shadow: var(--th-modal-shadow); }
-.th-dropdown          { background: var(--th-dropdown-bg); border: 1px solid var(--th-dropdown-border); box-shadow: var(--th-dropdown-shadow); }
-.th-gradient-text     { background: var(--th-gradient-text); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
-.th-gradient-brand    { background: var(--th-gradient-brand); }

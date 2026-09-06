@@ -3,9 +3,8 @@ import { TheoryExperiment } from '../App';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { Plus, Trash2, ArrowUp, ArrowDown, GripVertical, Copy, ClipboardPaste, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, ArrowUp, ArrowDown, GripVertical, Copy, ClipboardPaste } from 'lucide-react';
 import { toast } from 'sonner';
-import { useTheme } from '../hooks/useTheme';
 
 interface TheoryExperimentsFormProps {
   initialData: TheoryExperiment[];
@@ -24,7 +23,6 @@ const isValidURL = (url: string): boolean => {
 };
 
 export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryExperimentsFormProps) {
-  const { isDark } = useTheme();
   const [experiments, setExperiments] = useState<TheoryExperiment[]>(
     initialData.length > 0 ? initialData : [
       { exp_no: '1', date: '', experiment_title: '', github_url: '', marks: '' }
@@ -119,54 +117,49 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
 
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-      <h2
-        className="text-2xl font-black mb-2 tracking-tight bg-clip-text text-transparent"
-        style={{ backgroundImage: isDark ? 'linear-gradient(90deg, #a5b4fc, #c084fc)' : 'linear-gradient(90deg, #3730a3, #6d28d9)' }}
-      >
-        Theory Experiments
-      </h2>
-      <p className="mb-8 text-sm" style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>
-        Add all experiments with their details and GitHub URLs
-      </p>
-
-      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+      <h2 className="mb-6 text-gray-800 dark:text-slate-200 dark:text-slate-200">Theory Record Experiments</h2>
+      <p className="mb-6 text-gray-600 dark:text-slate-400 dark:text-slate-400">Add all experiments with their details and GitHub URLs</p>
+      
+      <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
         {experiments.map((exp, index) => (
-          <div
-            key={index}
-            className="p-5 rounded-2xl"
-            style={{
-              background: isDark ? 'rgba(12,15,38,0.80)' : 'rgba(240,244,255,0.80)',
-              border: isDark ? '1px solid rgba(99,102,241,0.20)' : '1px solid rgba(196,181,253,0.35)',
-            }}
-          >
+          <div key={index} className="p-6 bg-gray-50 dark:bg-slate-800/50 dark:bg-slate-800/50 rounded-lg border-2 border-gray-200 dark:border-slate-700 dark:border-slate-700 relative">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-0.5">
-                  <button type="button" onClick={() => moveExperimentUp(index)} disabled={index === 0}
-                    className="h-6 w-6 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
-                    style={{ background: isDark ? 'rgba(99,102,241,0.12)' : 'rgba(79,70,229,0.08)', color: isDark ? '#a5b4fc' : '#4f46e5' }}
+                <div className="flex flex-col gap-1">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => moveExperimentUp(index)}
+                    disabled={index === 0}
+                    className="h-6 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:bg-slate-800 dark:bg-slate-800 disabled:opacity-30"
                   >
-                    <ArrowUp className="w-3 h-3" />
-                  </button>
-                  <button type="button" onClick={() => moveExperimentDown(index)} disabled={index === experiments.length - 1}
-                    className="h-6 w-6 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
-                    style={{ background: isDark ? 'rgba(99,102,241,0.12)' : 'rgba(79,70,229,0.08)', color: isDark ? '#a5b4fc' : '#4f46e5' }}
+                    <ArrowUp className="w-4 h-4" />
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => moveExperimentDown(index)}
+                    disabled={index === experiments.length - 1}
+                    className="h-6 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:bg-slate-800 dark:bg-slate-800 disabled:opacity-30"
                   >
-                    <ArrowDown className="w-3 h-3" />
-                  </button>
+                    <ArrowDown className="w-4 h-4" />
+                  </Button>
                 </div>
-                <GripVertical className="w-4 h-4" style={{ color: isDark ? '#3d4870' : '#9ca3af' }} />
-                <span className="text-sm font-bold" style={{ color: isDark ? '#a5b4fc' : '#4f46e5' }}>
-                  Experiment {exp.exp_no}
-                </span>
+                <GripVertical className="w-5 h-5 text-gray-400" />
+                <h3 className="text-gray-700 dark:text-slate-300 dark:text-slate-300">Experiment {exp.exp_no}</h3>
               </div>
               {experiments.length > 1 && (
-                <button type="button" onClick={() => removeExperiment(index)}
-                  className="h-7 w-7 rounded-lg flex items-center justify-center transition-all"
-                  style={{ background: isDark ? 'rgba(248,113,113,0.10)' : 'rgba(220,38,38,0.06)', color: isDark ? '#f87171' : '#dc2626' }}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => removeExperiment(index)}
+                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
-                </button>
+                  <Trash2 className="w-4 h-4" />
+                </Button>
               )}
             </div>
 
@@ -254,37 +247,25 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
         ))}
       </div>
 
-      <div className="mt-5">
-        <button
+      <div className="mt-6">
+        <Button
           type="button"
+          variant="outline"
           onClick={addExperiment}
-          className="w-full py-3 rounded-2xl text-sm font-semibold border-2 border-dashed transition-all duration-200 hover:scale-[1.01]"
-          style={{
-            borderColor: isDark ? 'rgba(99,102,241,0.30)' : 'rgba(79,70,229,0.25)',
-            color: isDark ? '#818cf8' : '#4f46e5',
-            background: isDark ? 'rgba(99,102,241,0.05)' : 'rgba(79,70,229,0.04)',
-          }}
+          className="w-full border-dashed border-2"
         >
-          <Plus className="w-4 h-4 inline mr-2" />
+          <Plus className="w-4 h-4 mr-2" />
           Add Another Experiment
-        </button>
+        </Button>
       </div>
 
-      <div className="flex gap-3 justify-end mt-6">
-        <button
-          type="button" onClick={onBack}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
-          style={{ background: isDark ? 'rgba(99,102,241,0.08)' : 'rgba(79,70,229,0.06)', border: isDark ? '1px solid rgba(99,102,241,0.20)' : '1px solid rgba(79,70,229,0.20)', color: isDark ? '#a5b4fc' : '#4f46e5' }}
-        >
-          <ChevronLeft className="w-4 h-4" /> Back
-        </button>
-        <button
-          type="submit" disabled={!isValid}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
-          style={{ background: isValid ? (isDark ? 'linear-gradient(135deg, #6366f1, #a855f7)' : 'linear-gradient(135deg, #4f46e5, #7c3aed)') : isDark ? 'rgba(99,102,241,0.30)' : 'rgba(79,70,229,0.30)' }}
-        >
-          Generate <ChevronRight className="w-4 h-4" />
-        </button>
+      <div className="flex gap-4 justify-end mt-6">
+        <Button type="button" variant="outline" onClick={onBack}>
+          Back
+        </Button>
+        <Button type="submit" disabled={!isValid}>
+          Generate Document
+        </Button>
       </div>
     </form>
   );
