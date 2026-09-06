@@ -106,7 +106,6 @@ export function Dashboard() {
             ...prev,
             student_name: savedStudentInfo.student_name,
             register_number: savedStudentInfo.register_number,
-            department: savedStudentInfo.department || '',
           }));
           setProfileForm({
             student_name: savedStudentInfo.student_name || '',
@@ -143,7 +142,6 @@ export function Dashboard() {
         ...prev,
         student_name: profileForm.student_name,
         register_number: profileForm.register_number,
-        department: profileForm.department,
       }));
       setShowProfileSetup(false);
       toast.success('Profile saved successfully!');
@@ -156,11 +154,11 @@ export function Dashboard() {
       saveStudentInfo({
         student_name: courseInfo.student_name,
         register_number: courseInfo.register_number,
-        department: courseInfo.department || studentProfile?.department || '',
+        department: studentProfile?.department || '',
         userId: user.uid,
       });
     }
-  }, [user, courseInfo.student_name, courseInfo.register_number, courseInfo.department]);
+  }, [user, courseInfo.student_name, courseInfo.register_number, studentProfile?.department]);
 
   // Auto-save draft whenever data changes (after step 2)
   useEffect(() => {
