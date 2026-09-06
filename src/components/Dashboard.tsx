@@ -19,12 +19,13 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { History } from './History';
-import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut, FileSignature, BookOpen, FlaskConical, Wand2, ChevronRight, Sun, Moon, Heart, Sparkles, Code2 } from 'lucide-react';
 import {
-  saveToHistory,
-  getStudentInfo,
-  saveStudentInfo,
-  SavedRecord
+  FileText, History as HistoryIcon, LogOut,
+  FileSignature, BookOpen, FlaskConical, Wand2,
+  Sun, Moon, Sparkles, Code2,
+} from 'lucide-react';
+import {
+  saveToHistory, getStudentInfo, saveStudentInfo, SavedRecord
 } from '../utils/historyManager';
 import { Button } from './ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -42,7 +43,7 @@ import type { CourseInfo, TheoryExperiment, ProgrammingSession } from '../App';
 import { useTheme } from '../hooks/useTheme';
 
 export function Dashboard() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, isDark } = useTheme();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'main' | 'history'>('main');
@@ -64,59 +65,33 @@ export function Dashboard() {
   const [theoryExperiments, setTheoryExperiments] = useState<TheoryExperiment[]>([]);
   const [programmingSessions, setProgrammingSessions] = useState<ProgrammingSession[]>([]);
 
-  // Check authentication status on mount
   useEffect(() => {
     checkUser();
-
-    // Listen for auth state changes
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-      } else {
-        navigate('/');
-      }
+      if (firebaseUser) setUser(firebaseUser);
+      else navigate('/');
     });
-
-    return () => {
-      unsubscribe();
-    };
+    return () => unsubscribe();
   }, [navigate]);
 
   const checkUser = async () => {
     const currentUser = auth.currentUser;
-    if (currentUser) {
-      setUser(currentUser);
-    }
+    if (currentUser) setUser(currentUser);
   };
 
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
   const [studentProfile, setStudentProfile] = useState<any>(null);
   const [showProfileSetup, setShowProfileSetup] = useState(false);
-  const [profileForm, setProfileForm] = useState({
-    student_name: '',
-    register_number: '',
-    department: '',
-  });
+  const [profileForm, setProfileForm] = useState({ student_name: '', register_number: '', department: '' });
 
-  // Load student info when user is set
   useEffect(() => {
     if (user) {
       getStudentInfo(user.uid).then((savedStudentInfo) => {
         if (savedStudentInfo) {
           setStudentProfile(savedStudentInfo);
-          setCourseInfo(prev => ({
-            ...prev,
-            student_name: savedStudentInfo.student_name,
-            register_number: savedStudentInfo.register_number,
-          }));
-          setProfileForm({
-            student_name: savedStudentInfo.student_name || '',
-            register_number: savedStudentInfo.register_number || '',
-            department: savedStudentInfo.department || ''
-          });
-          if (!savedStudentInfo.student_name || !savedStudentInfo.register_number || !savedStudentInfo.department) {
-            setShowProfileSetup(true);
-          }
+          setCourseInfo(prev => ({ ...prev, student_name: savedStudentInfo.student_name, register_number: savedStudentInfo.register_number }));
+          setProfileForm({ student_name: savedStudentInfo.student_name || '', register_number: savedStudentInfo.register_number || '', department: savedStudentInfo.department || '' });
+          if (!savedStudentInfo.student_name || !savedStudentInfo.register_number || !savedStudentInfo.department) setShowProfileSetup(true);
         } else {
           setShowProfileSetup(true);
         }
@@ -124,108 +99,51 @@ export function Dashboard() {
     }
   }, [user]);
 
-  // Handle Profile Setup Save
   const handleSaveProfile = async () => {
     if (!profileForm.student_name || !profileForm.register_number || !profileForm.department) {
-      toast.error('Please fill in all fields');
-      return;
+      toast.error('Please fill in all fields'); return;
     }
-    
     if (user) {
-      const updatedProfile = {
-        student_name: profileForm.student_name,
-        register_number: profileForm.register_number,
-        department: profileForm.department,
-        userId: user.uid,
-      };
+      const updatedProfile = { student_name: profileForm.student_name, register_number: profileForm.register_number, department: profileForm.department, userId: user.uid };
       await saveStudentInfo(updatedProfile);
       setStudentProfile(updatedProfile);
-      setCourseInfo(prev => ({
-        ...prev,
-        student_name: profileForm.student_name,
-        register_number: profileForm.register_number,
-      }));
+      setCourseInfo(prev => ({ ...prev, student_name: profileForm.student_name, register_number: profileForm.register_number }));
       setShowProfileSetup(false);
       toast.success('Profile saved successfully!');
     }
   };
 
-  // Auto-save student info whenever name or register number changes
   useEffect(() => {
     if (user && courseInfo.student_name && courseInfo.register_number) {
-      saveStudentInfo({
-        student_name: courseInfo.student_name,
-        register_number: courseInfo.register_number,
-        department: studentProfile?.department || '',
-        userId: user.uid,
-      });
+      saveStudentInfo({ student_name: courseInfo.student_name, register_number: courseInfo.register_number, department: studentProfile?.department || '', userId: user.uid });
     }
   }, [user, courseInfo.student_name, courseInfo.register_number, studentProfile?.department]);
 
-  // Auto-save draft whenever data changes (after step 2)
   useEffect(() => {
     if (user && step >= 2 && courseInfo.course_code && courseInfo.course_title) {
       const timer = setTimeout(() => {
-        saveToHistory(
-          currentRecordId,
-          courseInfo,
-          theoryExperiments,
-          programmingSessions,
-          'draft',
-          user.uid
-        ).catch(err => {
-          console.error("Auto-draft save failed:", err);
-          toast.error(`Auto-save failed: ${err.message || 'Unknown error'}`);
-        });
+        saveToHistory(currentRecordId, courseInfo, theoryExperiments, programmingSessions, 'draft', user.uid)
+          .catch(err => { console.error("Auto-draft save failed:", err); toast.error(`Auto-save failed: ${err.message || 'Unknown error'}`); });
       }, 1000);
-
       return () => clearTimeout(timer);
     }
   }, [user, courseInfo, theoryExperiments, programmingSessions, step, currentRecordId]);
 
-  // Save on page unload or network reconnect/disconnect
   useEffect(() => {
     if (!user) return;
-
     const handleBeforeUnload = () => {
-      if (courseInfo.course_code && courseInfo.course_title) {
-        saveToHistory(
-          currentRecordId,
-          courseInfo,
-          theoryExperiments,
-          programmingSessions,
-          'draft',
-          user.uid
-        ).catch(() => {});
-      }
+      if (courseInfo.course_code && courseInfo.course_title) saveToHistory(currentRecordId, courseInfo, theoryExperiments, programmingSessions, 'draft', user.uid).catch(() => {});
     };
-
     const handleNetworkChange = () => {
       if (courseInfo.course_code && courseInfo.course_title) {
-        saveToHistory(
-          currentRecordId,
-          courseInfo,
-          theoryExperiments,
-          programmingSessions,
-          'draft',
-          user.uid
-        ).catch(() => {});
-        if (!navigator.onLine) {
-          toast.warning('Network connection lost', {
-            description: 'Your record has been safely auto-drafted to your device.',
-          });
-        } else {
-          toast.success('Back online', {
-            description: 'Your draft has been synced to the cloud.',
-          });
-        }
+        saveToHistory(currentRecordId, courseInfo, theoryExperiments, programmingSessions, 'draft', user.uid).catch(() => {});
+        if (!navigator.onLine) toast.warning('Network connection lost', { description: 'Your record has been safely auto-drafted.' });
+        else toast.success('Back online', { description: 'Your draft has been synced.' });
       }
     };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
     window.addEventListener('online', handleNetworkChange);
     window.addEventListener('offline', handleNetworkChange);
-
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
       window.removeEventListener('online', handleNetworkChange);
@@ -233,209 +151,222 @@ export function Dashboard() {
     };
   }, [user, courseInfo, theoryExperiments, programmingSessions, step]);
 
-  const handleLogout = async () => {
-    await signOut(auth);
-    navigate('/');
-  };
-
-  const handleRecordTypeSelect = (type: 'Theory Record' | 'Programming Record') => {
-    setCourseInfo({ ...courseInfo, record_type: type });
-    setStep(2);
-  };
-
-  const handleCourseInfoSubmit = (info: CourseInfo) => {
-    setCourseInfo(info);
-    setStep(3);
-  };
-
-  const handleExperimentsSubmit = (experiments: TheoryExperiment[]) => {
-    setTheoryExperiments(experiments);
-    setStep(4);
-  };
-
-  const handleSessionsSubmit = (sessions: ProgrammingSession[]) => {
-    setProgrammingSessions(sessions);
-    setStep(4);
-  };
-
-  const handleBack = () => {
-    if (step > 1) setStep(step - 1);
-  };
+  const handleLogout = async () => { await signOut(auth); navigate('/'); };
+  const handleRecordTypeSelect = (type: 'Theory Record' | 'Programming Record') => { setCourseInfo({ ...courseInfo, record_type: type }); setStep(2); };
+  const handleCourseInfoSubmit = (info: CourseInfo) => { setCourseInfo(info); setStep(3); };
+  const handleExperimentsSubmit = (experiments: TheoryExperiment[]) => { setTheoryExperiments(experiments); setStep(4); };
+  const handleSessionsSubmit = (sessions: ProgrammingSession[]) => { setProgrammingSessions(sessions); setStep(4); };
+  const handleBack = () => { if (step > 1) setStep(step - 1); };
 
   const handleReset = async () => {
     const savedStudentInfo = user ? await getStudentInfo(user.uid) : null;
     setCurrentRecordId(`rec_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`);
     setStep(1);
-    setCourseInfo({
-      record_type: '',
-      course_code: '',
-      course_title: '',
-      student_name: savedStudentInfo?.student_name || '',
-      register_number: savedStudentInfo?.register_number || '',
-      department: '',
-      semester: '',
-      academic_year: '',
-      college_name: '',
-      declaration_date: new Date().toLocaleDateString('en-GB'),
-      font_family: 'Times New Roman',
-    });
-    setTheoryExperiments([]);
-    setProgrammingSessions([]);
+    setCourseInfo({ record_type: '', course_code: '', course_title: '', student_name: savedStudentInfo?.student_name || '', register_number: savedStudentInfo?.register_number || '', department: '', semester: '', academic_year: '', college_name: '', declaration_date: new Date().toLocaleDateString('en-GB'), font_family: 'Times New Roman' });
+    setTheoryExperiments([]); setProgrammingSessions([]);
   };
 
   const handleCreateNewRecord = async () => {
-    // Explicitly save the current work as a draft before resetting
     if (user && courseInfo.course_code && courseInfo.course_title) {
       try {
-        await saveToHistory(
-          currentRecordId,
-          courseInfo,
-          theoryExperiments,
-          programmingSessions,
-          'draft',
-          user.uid
-        );
-        toast.success('Current record saved as draft!', {
-          description: 'You can find it in your History later.',
-        });
-      } catch (err: any) {
-        toast.error(`Failed to save draft: ${err.message || 'Unknown error'}`);
-      }
+        await saveToHistory(currentRecordId, courseInfo, theoryExperiments, programmingSessions, 'draft', user.uid);
+        toast.success('Current record saved as draft!', { description: 'You can find it in your History.' });
+      } catch (err: any) { toast.error(`Failed to save draft: ${err.message || 'Unknown error'}`); }
     }
     handleReset();
   };
 
   const handleLoadRecord = (record: SavedRecord) => {
-    setCurrentRecordId(record.id);
-    setCourseInfo(record.courseInfo);
-    setTheoryExperiments(record.theoryExperiments);
-    setProgrammingSessions(record.programmingSessions);
-    setStep(4);
-    setViewMode('main');
+    setCurrentRecordId(record.id); setCourseInfo(record.courseInfo);
+    setTheoryExperiments(record.theoryExperiments); setProgrammingSessions(record.programmingSessions);
+    setStep(4); setViewMode('main');
   };
 
-  const initiateSaveComplete = () => {
-    setIsShareDialogOpen(true);
-  };
+  const initiateSaveComplete = () => setIsShareDialogOpen(true);
 
   const handleSaveComplete = async (share: boolean) => {
     if (!user) return;
     try {
-      await saveToHistory(
-        currentRecordId,
-        courseInfo,
-        theoryExperiments,
-        programmingSessions,
-        'complete',
-        user.uid,
-        share // Pass user's choice to share
-      );
-      // Clean up the local draft if it existed
-      import('../utils/historyManager').then(({ deleteDraftLocally }) => {
-        if (deleteDraftLocally) deleteDraftLocally(currentRecordId);
-      });
+      await saveToHistory(currentRecordId, courseInfo, theoryExperiments, programmingSessions, 'complete', user.uid, share);
+      import('../utils/historyManager').then(({ deleteDraftLocally }) => { if (deleteDraftLocally) deleteDraftLocally(currentRecordId); });
       toast.success('✅ Record saved as complete! Starting new record...');
-      // Reset and start a new record after a short delay
-      setTimeout(() => {
-        handleReset();
-      }, 1000);
-    } catch (error: any) {
-      console.error("Save complete failed:", error);
-      toast.error(`Failed to save record: ${error.message || 'Unknown error'}`);
-    }
+      setTimeout(() => handleReset(), 1000);
+    } catch (error: any) { console.error("Save complete failed:", error); toast.error(`Failed to save record: ${error.message || 'Unknown error'}`); }
   };
 
-  if (!user) {
-    return null; // Show nothing while checking auth
-  }
+  if (!user) return null;
 
-  const getUserDisplayName = () => {
-    if (user.displayName) return user.displayName;
-    return user.email?.split('@')[0] || 'User';
-  };
+  const getUserDisplayName = () => user.displayName || user.email?.split('@')[0] || 'User';
+  const getUserInitials = () => getUserDisplayName().split(' ').map((n: string) => n[0]).join('').toUpperCase().slice(0, 2);
 
-  const getUserInitials = () => {
-    const name = getUserDisplayName();
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
+  const STEPS = [
+    { id: 1, label: 'Type',     icon: FileSignature },
+    { id: 2, label: 'Course',   icon: BookOpen },
+    { id: 3, label: 'Details',  icon: FlaskConical },
+    { id: 4, label: 'Generate', icon: Wand2 },
+  ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-blue-100 via-indigo-50 to-purple-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 relative overflow-hidden transition-colors duration-500">
-      {/* Decorative blurred background blobs */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/20 dark:bg-blue-600/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob pointer-events-none"></div>
-      <div className="absolute top-0 right-0 w-96 h-96 bg-purple-400/20 dark:bg-purple-600/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 pointer-events-none"></div>
-      <div className="absolute -bottom-8 left-40 w-96 h-96 bg-indigo-400/20 dark:bg-indigo-600/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000 pointer-events-none"></div>
+    <div
+      className="min-h-screen relative overflow-hidden transition-colors duration-300"
+      style={{ background: isDark
+        ? 'linear-gradient(135deg, #050816 0%, #0c1130 50%, #080d24 100%)'
+        : 'linear-gradient(135deg, #eef2ff 0%, #f5f0ff 50%, #e8eeff 100%)'
+      }}
+    >
+      {/* ── Background Blobs ─────────────────────────── */}
+      <div className="absolute top-0 left-0 w-[500px] h-[500px] rounded-full filter blur-3xl opacity-60 animate-blob pointer-events-none"
+        style={{ background: isDark ? 'radial-gradient(circle, rgba(59,130,246,0.18) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(147,197,253,0.45) 0%, transparent 70%)' }}
+      />
+      <div className="absolute top-10 right-0 w-[450px] h-[450px] rounded-full filter blur-3xl opacity-50 animate-blob animation-delay-2000 pointer-events-none"
+        style={{ background: isDark ? 'radial-gradient(circle, rgba(139,92,246,0.15) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(196,181,253,0.45) 0%, transparent 70%)' }}
+      />
+      <div className="absolute -bottom-10 left-1/3 w-[400px] h-[400px] rounded-full filter blur-3xl opacity-40 animate-blob animation-delay-4000 pointer-events-none"
+        style={{ background: isDark ? 'radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(165,180,252,0.40) 0%, transparent 70%)' }}
+      />
 
-      {/* Top Navigation Bar */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-slate-900/60 border-b border-white/40 dark:border-white/10 shadow-sm transition-colors duration-500">
+      {/* ── Sticky Navigation ────────────────────────── */}
+      <nav
+        className="sticky top-0 z-50 backdrop-blur-xl"
+        style={{
+          background: isDark ? 'rgba(5,8,22,0.85)' : 'rgba(255,255,255,0.82)',
+          borderBottom: isDark ? '1px solid rgba(99,102,241,0.18)' : '1px solid rgba(255,255,255,0.70)',
+          boxShadow: isDark ? '0 1px 32px rgba(99,102,241,0.15)' : '0 1px 24px rgba(99,102,241,0.08)',
+        }}
+      >
         <div className="container mx-auto px-4 max-w-6xl h-16 flex items-center justify-between">
+          {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-2 rounded-xl shadow-md">
-              <FileText className="w-6 h-6 text-white" />
+            <div className="relative">
+              <div className="absolute inset-0 rounded-xl blur-sm opacity-60"
+                style={{ background: 'linear-gradient(135deg, #6366f1, #a855f7)' }}
+              />
+              <div className="relative bg-gradient-to-br from-indigo-500 to-purple-600 p-2.5 rounded-xl shadow-lg">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-800 to-purple-800 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
+              <span
+                className="text-xl font-black tracking-tight bg-clip-text text-transparent"
+                style={{ backgroundImage: isDark
+                  ? 'linear-gradient(90deg, #a5b4fc, #c084fc)'
+                  : 'linear-gradient(90deg, #3730a3, #6d28d9)'
+                }}
+              >
                 Lab Record Generator
-              </h1>
+              </span>
             </div>
           </div>
-          
-          <div className="flex items-center gap-4">
+
+          {/* Nav Controls */}
+          <div className="flex items-center gap-3">
+            {/* History Button */}
             <Button
               onClick={() => setViewMode(viewMode === 'main' ? 'history' : 'main')}
               variant="outline"
-              className="hidden sm:flex border-purple-200 dark:border-purple-800/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100/50 dark:hover:bg-purple-900/30 backdrop-blur-sm transition-all shadow-sm"
+              className="hidden sm:flex text-sm font-medium transition-all duration-200"
+              style={{
+                background: isDark ? 'rgba(99,102,241,0.08)' : 'rgba(79,70,229,0.06)',
+                borderColor: isDark ? 'rgba(129,140,248,0.25)' : 'rgba(79,70,229,0.25)',
+                color: isDark ? '#a5b4fc' : '#4f46e5',
+              }}
             >
               <HistoryIcon className="w-4 h-4 mr-2" />
-              {viewMode === 'main' ? 'View History' : 'Back to Generator'}
+              {viewMode === 'main' ? 'History' : 'Back'}
             </Button>
 
-            <Button
-              variant="ghost"
-              size="icon"
+            {/* Theme Toggle */}
+            <button
               onClick={toggleTheme}
-              className="rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+              className="relative w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 group"
+              style={{
+                background: isDark ? 'rgba(99,102,241,0.12)' : 'rgba(79,70,229,0.08)',
+                border: isDark ? '1px solid rgba(129,140,248,0.20)' : '1px solid rgba(79,70,229,0.15)',
+              }}
+              title={`Switch to ${isDark ? 'light' : 'dark'} mode`}
             >
-              {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-slate-600" />}
-            </Button>
+              {isDark
+                ? <Sun className="w-4.5 h-4.5 text-yellow-300 group-hover:rotate-12 transition-transform" />
+                : <Moon className="w-4.5 h-4.5 text-indigo-600 group-hover:-rotate-12 transition-transform" />
+              }
+            </button>
 
+            {/* Avatar Dropdown */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="relative h-10 w-10 rounded-full border-2 border-white shadow-md hover:shadow-lg transition-all">
+                <button
+                  className="relative h-10 w-10 rounded-xl overflow-hidden transition-all duration-200 hover:scale-105"
+                  style={{
+                    border: isDark ? '2px solid rgba(129,140,248,0.30)' : '2px solid rgba(79,70,229,0.25)',
+                    boxShadow: isDark ? '0 0 12px rgba(99,102,241,0.20)' : '0 4px 12px rgba(79,70,229,0.15)',
+                  }}
+                >
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={user.photoURL} alt={getUserDisplayName()} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-600 text-white font-medium">
+                    <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold text-sm">
                       {getUserInitials()}
                     </AvatarFallback>
                   </Avatar>
-                </Button>
+                </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl border-white/50 dark:border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-2 transition-colors duration-500">
-                <DropdownMenuLabel className="pb-4">
-                  <div className="flex flex-col space-y-1">
-                    <p className="font-semibold text-gray-800 dark:text-gray-200">{getUserDisplayName()}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
-                    {studentProfile?.department && (
-                      <span className="mt-2 inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 w-max border border-blue-100 dark:border-blue-800/50">
-                        Dept: {studentProfile.department}
-                      </span>
-                    )}
+              <DropdownMenuContent
+                align="end"
+                className="w-64 rounded-2xl p-2 backdrop-blur-xl"
+                style={{
+                  background: isDark ? 'rgba(12,15,40,0.97)' : 'rgba(255,255,255,0.97)',
+                  border: isDark ? '1px solid rgba(99,102,241,0.20)' : '1px solid rgba(196,181,253,0.40)',
+                  boxShadow: isDark
+                    ? '0 8px 40px rgba(0,0,0,0.50), 0 0 0 1px rgba(99,102,241,0.12)'
+                    : '0 8px 32px rgba(79,70,229,0.12)',
+                }}
+              >
+                <DropdownMenuLabel className="pb-3">
+                  <div className="flex items-center gap-3 p-1">
+                    <Avatar className="h-9 w-9 flex-shrink-0">
+                      <AvatarImage src={user.photoURL} alt={getUserDisplayName()} />
+                      <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-bold text-xs">
+                        {getUserInitials()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col min-w-0">
+                      <p className="font-semibold text-sm truncate" style={{ color: isDark ? '#e8e9ff' : '#1e1b4b' }}>
+                        {getUserDisplayName()}
+                      </p>
+                      <p className="text-xs truncate" style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>
+                        {user.email}
+                      </p>
+                      {studentProfile?.department && (
+                        <span className="mt-1.5 inline-flex items-center px-2 py-0.5 rounded-md text-[10px] font-semibold w-max"
+                          style={{
+                            background: isDark ? 'rgba(99,102,241,0.15)' : 'rgba(79,70,229,0.08)',
+                            color: isDark ? '#a5b4fc' : '#4f46e5',
+                            border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(79,70,229,0.20)',
+                          }}
+                        >
+                          {studentProfile.department}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </DropdownMenuLabel>
-                
-                <div className="sm:hidden mb-2 px-2">
+
+                <div className="sm:hidden mb-2 px-1">
                   <Button
                     onClick={() => setViewMode(viewMode === 'main' ? 'history' : 'main')}
                     variant="secondary"
-                    className="w-full justify-start"
+                    className="w-full justify-start text-sm"
                   >
                     <HistoryIcon className="w-4 h-4 mr-2" />
                     {viewMode === 'main' ? 'History' : 'Generator'}
                   </Button>
                 </div>
 
-                <DropdownMenuSeparator className="bg-gray-100" />
-                <DropdownMenuItem onClick={handleLogout} className="text-red-600 focus:text-red-700 focus:bg-red-50 cursor-pointer rounded-lg mt-1">
+                <DropdownMenuSeparator style={{ background: isDark ? 'rgba(99,102,241,0.15)' : 'rgba(196,181,253,0.30)' }} />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="cursor-pointer rounded-xl mt-1 text-sm"
+                  style={{ color: isDark ? '#f87171' : '#dc2626' }}
+                >
                   <LogOut className="w-4 h-4 mr-2" />
                   Sign Out
                 </DropdownMenuItem>
@@ -445,136 +376,169 @@ export function Dashboard() {
         </div>
       </nav>
 
+      {/* ── Main Container ───────────────────────────── */}
       <div className="container mx-auto px-4 py-8 max-w-5xl relative z-10">
-        {/* Main Content or History */}
+
+        {/* History View */}
         {viewMode === 'history' ? (
-          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-3xl p-6 sm:p-8 transition-colors duration-500">
-            <History 
-              onLoadRecord={handleLoadRecord} 
-              onClose={() => setViewMode('main')} 
-              userId={user.uid} 
+          <div
+            className="rounded-3xl p-6 sm:p-8 backdrop-blur-xl"
+            style={{
+              background: isDark ? 'rgba(15,18,40,0.85)' : 'rgba(255,255,255,0.85)',
+              border: isDark ? '1px solid rgba(99,102,241,0.15)' : '1px solid rgba(255,255,255,0.70)',
+              boxShadow: isDark ? '0 8px 40px rgba(0,0,0,0.40)' : '0 8px 40px rgba(99,102,241,0.08)',
+            }}
+          >
+            <History
+              onLoadRecord={handleLoadRecord}
+              onClose={() => setViewMode('main')}
+              userId={user.uid}
               userName={getUserDisplayName()}
               studentProfile={studentProfile}
             />
           </div>
         ) : (
           <>
-            {/* Modern Progress Indicator */}
-            <div className="mb-10 max-w-3xl mx-auto">
-              <div className="flex items-center justify-between relative">
-                <div className="absolute left-0 right-0 top-1/2 h-1 bg-gray-200/60 dark:bg-slate-800 -z-10 rounded-full transform -translate-y-1/2 transition-colors"></div>
-                <div 
-                  className="absolute left-0 top-1/2 h-1 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 -z-10 rounded-full transform -translate-y-1/2 transition-all duration-500 ease-out"
-                  style={{ width: `${((step - 1) / 3) * 100}%` }}
-                ></div>
-                
-                {[
-                  { id: 1, label: 'Type', icon: FileSignature },
-                  { id: 2, label: 'Course', icon: BookOpen },
-                  { id: 3, label: 'Details', icon: FlaskConical },
-                  { id: 4, label: 'Generate', icon: Wand2 },
-                ].map((s) => (
-                  <div key={s.id} className="flex flex-col items-center gap-2">
-                    <div
-                      className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm ${
-                        step === s.id
-                          ? 'bg-gradient-to-br from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 text-white shadow-lg shadow-blue-500/30 scale-110'
-                          : step > s.id
-                          ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-2 border-blue-600 dark:border-blue-500'
-                          : 'bg-white/80 dark:bg-slate-800/80 text-gray-400 dark:text-slate-500 border-2 border-gray-100 dark:border-slate-700 backdrop-blur-sm'
-                      }`}
-                    >
-                      <s.icon className={`w-5 h-5 ${step === s.id ? 'animate-pulse' : ''}`} />
+            {/* ── Progress Stepper ─────────────────── */}
+            <div className="mb-10 max-w-2xl mx-auto px-4">
+              <div className="relative flex items-center justify-between">
+                {/* Track Background */}
+                <div
+                  className="absolute left-6 right-6 top-6 h-0.5 rounded-full -z-10"
+                  style={{ background: isDark ? 'rgba(99,102,241,0.15)' : 'rgba(196,181,253,0.30)' }}
+                />
+                {/* Progress Fill */}
+                <div
+                  className="absolute left-6 top-6 h-0.5 rounded-full -z-10 transition-all duration-700 ease-out"
+                  style={{
+                    width: `calc(${((step - 1) / 3) * 100}% - ${step === 1 ? 0 : 12}px)`,
+                    background: isDark
+                      ? 'linear-gradient(90deg, #6366f1, #a855f7)'
+                      : 'linear-gradient(90deg, #4f46e5, #7c3aed)',
+                  }}
+                />
+
+                {STEPS.map((s) => {
+                  const isActive  = step === s.id;
+                  const isDone    = step > s.id;
+                  const isIdle    = step < s.id;
+                  return (
+                    <div key={s.id} className="flex flex-col items-center gap-2.5 z-10">
+                      <div
+                        className="w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300"
+                        style={{
+                          background: isActive
+                            ? isDark ? 'linear-gradient(135deg, #6366f1, #a855f7)' : 'linear-gradient(135deg, #4f46e5, #7c3aed)'
+                            : isDone
+                            ? isDark ? 'rgba(15,18,40,0.95)' : '#ffffff'
+                            : isDark ? 'rgba(12,15,38,0.80)' : 'rgba(255,255,255,0.80)',
+                          border: isActive
+                            ? 'none'
+                            : isDone
+                            ? isDark ? '2px solid #818cf8' : '2px solid #4f46e5'
+                            : isDark ? '2px solid rgba(99,102,241,0.20)' : '2px solid rgba(196,181,253,0.50)',
+                          boxShadow: isActive
+                            ? isDark ? '0 0 20px rgba(99,102,241,0.40), 0 4px 12px rgba(0,0,0,0.30)' : '0 0 20px rgba(79,70,229,0.30), 0 4px 12px rgba(79,70,229,0.15)'
+                            : 'none',
+                          transform: isActive ? 'scale(1.1)' : 'scale(1)',
+                          color: isActive
+                            ? '#ffffff'
+                            : isDone
+                            ? isDark ? '#818cf8' : '#4f46e5'
+                            : isDark ? '#3d4870' : '#9ca3af',
+                        }}
+                      >
+                        <s.icon className={`w-5 h-5 ${isActive ? 'animate-pulse' : ''}`} />
+                      </div>
+                      <span
+                        className="text-xs font-semibold transition-colors"
+                        style={{
+                          color: isActive
+                            ? isDark ? '#a5b4fc' : '#3730a3'
+                            : isDone
+                            ? isDark ? '#6b7daa' : '#374151'
+                            : isDark ? '#3d4870' : '#9ca3af',
+                        }}
+                      >
+                        {s.label}
+                      </span>
                     </div>
-                    <span className={`text-xs font-medium transition-colors ${
-                      step === s.id ? 'text-blue-700 dark:text-blue-400' : step > s.id ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-600'
-                    }`}>
-                      {s.label}
-                    </span>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
 
-            {/* Step Content */}
-            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-3xl p-6 sm:p-10 transition-all duration-500">
+            {/* ── Step Card ─────────────────────────── */}
+            <div
+              className="rounded-3xl p-6 sm:p-10 backdrop-blur-xl transition-all duration-300"
+              style={{
+                background: isDark ? 'rgba(15,18,40,0.85)' : 'rgba(255,255,255,0.85)',
+                border: isDark ? '1px solid rgba(99,102,241,0.15)' : '1px solid rgba(255,255,255,0.70)',
+                boxShadow: isDark
+                  ? '0 8px 40px rgba(0,0,0,0.40), 0 0 1px rgba(99,102,241,0.08)'
+                  : '0 8px 40px rgba(99,102,241,0.08)',
+              }}
+            >
               {step === 1 && <RecordTypeSelector onSelect={handleRecordTypeSelect} />}
-              
-              {step === 2 && (
-                <CourseInfoForm
-                  initialData={courseInfo}
-                  onSubmit={handleCourseInfoSubmit}
-                  onBack={handleBack}
-                />
-              )}
-              
+              {step === 2 && <CourseInfoForm initialData={courseInfo} onSubmit={handleCourseInfoSubmit} onBack={handleBack} />}
               {step === 3 && courseInfo.record_type === 'Theory Record' && (
-                <TheoryExperimentsForm
-                  initialData={theoryExperiments}
-                  onSubmit={handleExperimentsSubmit}
-                  onBack={handleBack}
-                />
+                <TheoryExperimentsForm initialData={theoryExperiments} onSubmit={handleExperimentsSubmit} onBack={handleBack} />
               )}
-              
               {step === 3 && courseInfo.record_type === 'Programming Record' && (
-                <ProgrammingSessionsForm
-                  initialData={programmingSessions}
-                  onSubmit={handleSessionsSubmit}
-                  onBack={handleBack}
-                />
+                <ProgrammingSessionsForm initialData={programmingSessions} onSubmit={handleSessionsSubmit} onBack={handleBack} />
               )}
-              
               {step === 4 && (
                 <div>
-                  <DocumentPreview
-                    courseInfo={courseInfo}
-                    theoryExperiments={theoryExperiments}
-                    programmingSessions={programmingSessions}
-                    onEditCourseInfo={() => setStep(2)}
-                    onEditExperiments={() => setStep(3)}
-                  />
-                  <DownloadButtons
-                    courseInfo={courseInfo}
-                    theoryExperiments={theoryExperiments}
-                    programmingSessions={programmingSessions}
-                  />
-                  <div className="flex gap-4 justify-center mt-6">
+                  <DocumentPreview courseInfo={courseInfo} theoryExperiments={theoryExperiments} programmingSessions={programmingSessions} onEditCourseInfo={() => setStep(2)} onEditExperiments={() => setStep(3)} />
+                  <DownloadButtons courseInfo={courseInfo} theoryExperiments={theoryExperiments} programmingSessions={programmingSessions} />
+                  <div className="flex gap-4 justify-center mt-6 flex-wrap">
                     <button
                       onClick={handleCreateNewRecord}
-                      className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:scale-105"
+                      style={{ background: isDark ? 'linear-gradient(135deg, #4f46e5, #6366f1)' : 'linear-gradient(135deg, #4f46e5, #7c3aed)', boxShadow: '0 4px 12px rgba(79,70,229,0.25)' }}
                     >
                       Create New Record
                     </button>
                     <button
                       onClick={initiateSaveComplete}
-                      className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      className="px-6 py-2.5 rounded-xl text-sm font-semibold text-white transition-all duration-200 hover:scale-105"
+                      style={{ background: isDark ? 'linear-gradient(135deg, #059669, #10b981)' : 'linear-gradient(135deg, #059669, #34d399)', boxShadow: '0 4px 12px rgba(5,150,105,0.25)' }}
                     >
                       Save as Complete
                     </button>
                   </div>
-                  
+
                   {/* Share Dialog */}
                   <AlertDialog open={isShareDialogOpen} onOpenChange={setIsShareDialogOpen}>
-                    <AlertDialogContent>
+                    <AlertDialogContent
+                      className="rounded-2xl backdrop-blur-xl"
+                      style={{
+                        background: isDark ? 'rgba(10,12,30,0.98)' : 'rgba(255,255,255,0.98)',
+                        border: isDark ? '1px solid rgba(99,102,241,0.20)' : '1px solid rgba(196,181,253,0.40)',
+                        boxShadow: isDark ? '0 24px 80px rgba(0,0,0,0.60)' : '0 24px 80px rgba(79,70,229,0.15)',
+                      }}
+                    >
                       <AlertDialogHeader>
-                        <AlertDialogTitle>Share with Community?</AlertDialogTitle>
-                        <AlertDialogDescription>
+                        <AlertDialogTitle style={{ color: isDark ? '#e8e9ff' : '#1e1b4b' }}>
+                          Share with Community?
+                        </AlertDialogTitle>
+                        <AlertDialogDescription style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>
                           Do you want to share this completed record with the SEC community? Other students will be able to view and use it as a reference.
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel onClick={() => handleSaveComplete(false)}>
+                        <AlertDialogCancel onClick={() => handleSaveComplete(false)} style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>
                           No, keep private
                         </AlertDialogCancel>
-                        <AlertDialogAction onClick={() => handleSaveComplete(true)} className="bg-green-600 hover:bg-green-700">
+                        <AlertDialogAction onClick={() => handleSaveComplete(true)} className="bg-emerald-600 hover:bg-emerald-700 text-white">
                           Yes, share it!
                         </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                  
+
                   {/* Auto-save indicator */}
-                  <p className="text-center text-sm text-gray-500 mt-4">
+                  <p className="text-center text-xs mt-4 font-medium" style={{ color: isDark ? '#3d4870' : '#9ca3af' }}>
                     ✓ Auto-saved as draft
                   </p>
                 </div>
@@ -583,42 +547,71 @@ export function Dashboard() {
           </>
         )}
 
-        {/* Creative Developer Credit Footer */}
+        {/* ── Developer Credit ─────────────────────── */}
         <div className="mt-20 pb-12 flex justify-center w-full">
           <div className="relative group cursor-pointer">
-            {/* Glowing background effect that expands on hover */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl blur opacity-25 group-hover:opacity-75 transition duration-1000 group-hover:duration-200"></div>
-            
-            {/* The main card */}
-            <div className="relative flex items-center gap-4 bg-white/80 dark:bg-slate-900/90 backdrop-blur-xl border border-white/50 dark:border-slate-700/50 py-3 px-5 sm:py-4 sm:px-6 rounded-2xl shadow-xl transition-all duration-300 transform group-hover:scale-[1.02]">
-              
-              {/* Left Side: Avatar/Icon */}
-              <div className="relative hidden sm:block">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 p-[1px]">
-                  <div className="w-full h-full bg-white dark:bg-slate-900 rounded-[11px] flex items-center justify-center">
-                    <Sparkles className="w-6 h-6 text-purple-500 group-hover:animate-pulse" />
-                  </div>
+            {/* Glow ring on hover */}
+            <div
+              className="absolute -inset-1 rounded-2xl blur opacity-0 group-hover:opacity-100 transition-all duration-700"
+              style={{ background: isDark
+                ? 'linear-gradient(135deg, #6366f1, #a855f7, #6366f1)'
+                : 'linear-gradient(135deg, #4f46e5, #7c3aed, #4f46e5)'
+              }}
+            />
+
+            <div
+              className="relative flex items-center gap-4 py-3.5 px-6 rounded-2xl backdrop-blur-xl transition-all duration-300 transform group-hover:scale-[1.02]"
+              style={{
+                background: isDark ? 'rgba(15,18,40,0.92)' : 'rgba(255,255,255,0.90)',
+                border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(255,255,255,0.80)',
+                boxShadow: isDark
+                  ? '0 4px 24px rgba(0,0,0,0.40), inset 0 1px 0 rgba(255,255,255,0.04)'
+                  : '0 4px 24px rgba(99,102,241,0.08)',
+              }}
+            >
+              {/* Sparkle Icon with Ping */}
+              <div className="relative hidden sm:block flex-shrink-0">
+                <div
+                  className="w-11 h-11 rounded-xl flex items-center justify-center"
+                  style={{
+                    background: isDark ? 'rgba(10,12,30,0.98)' : 'rgba(255,255,255,0.98)',
+                    border: isDark ? '1px solid rgba(99,102,241,0.30)' : '1px solid rgba(196,181,253,0.50)',
+                  }}
+                >
+                  <Sparkles className="w-5 h-5 group-hover:animate-pulse" style={{ color: isDark ? '#818cf8' : '#7c3aed' }} />
                 </div>
-                {/* Ping animation dot */}
-                <span className="absolute -top-1 -right-1 flex h-3 w-3">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                  <span className="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                <span className="absolute -top-1 -right-1 flex h-2.5 w-2.5">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ background: isDark ? '#818cf8' : '#7c3aed' }} />
+                  <span className="relative inline-flex rounded-full h-2.5 w-2.5" style={{ background: isDark ? '#818cf8' : '#7c3aed' }} />
                 </span>
               </div>
 
-              {/* Right Side: Details */}
+              {/* Text Content */}
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-widest font-bold text-gray-500 dark:text-gray-400 mb-0.5 flex items-center gap-1">
-                  <Code2 className="w-3 h-3" /> System Architect
+                <span className="text-[9px] uppercase tracking-[0.2em] font-bold flex items-center gap-1.5 mb-0.5" style={{ color: isDark ? '#3d4870' : '#9ca3af' }}>
+                  <Code2 className="w-2.5 h-2.5" /> System Architect
                 </span>
-                <span className="text-lg font-black bg-gradient-to-r from-blue-700 to-purple-700 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent group-hover:from-purple-600 group-hover:to-blue-600 transition-all duration-500">
+                <span
+                  className="text-base font-black tracking-tight bg-clip-text text-transparent"
+                  style={{ backgroundImage: isDark
+                    ? 'linear-gradient(90deg, #a5b4fc, #c084fc)'
+                    : 'linear-gradient(90deg, #3730a3, #6d28d9)'
+                  }}
+                >
                   SHANMUGAKARTHIK G
                 </span>
-                <div className="flex flex-wrap items-center gap-2 mt-1">
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                <div className="flex items-center gap-2 mt-1 flex-wrap">
+                  <span
+                    className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                    style={{
+                      background: isDark ? 'rgba(99,102,241,0.12)' : 'rgba(79,70,229,0.08)',
+                      color: isDark ? '#a5b4fc' : '#4f46e5',
+                      border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(79,70,229,0.20)',
+                    }}
+                  >
                     INFORMATION TECHNOLOGY
                   </span>
-                  <span className="hidden sm:inline text-xs text-gray-400 dark:text-slate-500">
+                  <span className="hidden sm:block text-[10px] font-medium" style={{ color: isDark ? '#3d4870' : '#9ca3af' }}>
                     Saveetha Engineering College
                   </span>
                 </div>
@@ -627,64 +620,77 @@ export function Dashboard() {
           </div>
         </div>
       </div>
-      
-      {/* Profile Setup Dialog */}
+
+      {/* ── Profile Setup Dialog ─────────────────────── */}
       <AlertDialog open={showProfileSetup} onOpenChange={() => {}}>
-        <AlertDialogContent className="bg-white dark:bg-slate-900 border-white/50 dark:border-slate-800 text-gray-900 dark:text-gray-100">
+        <AlertDialogContent
+          className="rounded-2xl backdrop-blur-xl"
+          style={{
+            background: isDark ? 'rgba(10,12,30,0.98)' : 'rgba(255,255,255,0.98)',
+            border: isDark ? '1px solid rgba(99,102,241,0.20)' : '1px solid rgba(196,181,253,0.40)',
+            boxShadow: isDark ? '0 24px 80px rgba(0,0,0,0.60)' : '0 24px 80px rgba(79,70,229,0.15)',
+          }}
+        >
           <AlertDialogHeader>
-            <AlertDialogTitle>Complete Your Profile</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-500 dark:text-gray-400">
+            <AlertDialogTitle style={{ color: isDark ? '#e8e9ff' : '#1e1b4b' }}>Complete Your Profile</AlertDialogTitle>
+            <AlertDialogDescription style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>
               Please enter your details to set up your profile and enable community features.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Full Name</label>
-              <input 
-                type="text" 
-                className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800"
-                placeholder="e.g. John Doe"
-                value={profileForm.student_name}
-                onChange={e => setProfileForm(p => ({ ...p, student_name: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Register Number</label>
-              <input 
-                type="text" 
-                className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800"
-                placeholder="e.g. 21152012345"
-                value={profileForm.register_number}
-                onChange={e => setProfileForm(p => ({ ...p, register_number: e.target.value }))}
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium">Department</label>
-              <select 
-                className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800"
+            {[
+              { label: 'Full Name', key: 'student_name', placeholder: 'e.g. John Doe', type: 'text' },
+              { label: 'Register Number', key: 'register_number', placeholder: 'e.g. 21152012345', type: 'text' },
+            ].map(field => (
+              <div key={field.key} className="space-y-1.5">
+                <label className="text-xs font-bold uppercase tracking-wider" style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>
+                  {field.label}
+                </label>
+                <input
+                  type={field.type}
+                  className="w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all outline-none"
+                  style={{
+                    background: isDark ? 'rgba(12,15,38,0.95)' : 'rgba(255,255,255,0.95)',
+                    border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(196,181,253,0.50)',
+                    color: isDark ? '#e8e9ff' : '#1e1b4b',
+                  }}
+                  placeholder={field.placeholder}
+                  value={(profileForm as any)[field.key]}
+                  onChange={e => setProfileForm(p => ({ ...p, [field.key]: e.target.value }))}
+                />
+              </div>
+            ))}
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold uppercase tracking-wider" style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>Department</label>
+              <select
+                className="w-full px-3 py-2.5 rounded-xl text-sm font-medium transition-all outline-none"
+                style={{
+                  background: isDark ? 'rgba(12,15,38,0.95)' : 'rgba(255,255,255,0.95)',
+                  border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(196,181,253,0.50)',
+                  color: isDark ? '#e8e9ff' : '#1e1b4b',
+                }}
                 value={profileForm.department}
                 onChange={e => setProfileForm(p => ({ ...p, department: e.target.value }))}
               >
                 <option value="">Select Department</option>
-                <option value="IT">IT</option>
-                <option value="CSE">CSE</option>
-                <option value="ECE">ECE</option>
-                <option value="EEE">EEE</option>
-                <option value="MECH">MECH</option>
-                <option value="CIVIL">CIVIL</option>
-                <option value="BME">BME</option>
-                <option value="AIDS">AIDS</option>
-                <option value="AIML">AI&ML</option>
+                {['IT','CSE','ECE','EEE','MECH','CIVIL','BME','AIDS','AIML'].map(d => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
               </select>
             </div>
           </div>
           <AlertDialogFooter>
-            <AlertDialogAction onClick={handleSaveProfile} className="w-full bg-blue-600 hover:bg-blue-700 text-white">
-              Save Profile
+            <AlertDialogAction
+              onClick={handleSaveProfile}
+              className="w-full rounded-xl text-white font-semibold text-sm"
+              style={{ background: isDark ? 'linear-gradient(135deg, #6366f1, #a855f7)' : 'linear-gradient(135deg, #4f46e5, #7c3aed)' }}
+            >
+              Save Profile & Continue
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
       <Toaster />
     </div>
   );

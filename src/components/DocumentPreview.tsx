@@ -3,8 +3,8 @@ import QRCode from 'react-qr-code';
 import collegeHeader from 'figma:asset/b4febb2531b296d5e7d0e8087088780a9a2db377.png';
 import { formatDate } from '../utils/dateFormatter';
 import { ensureHttpsPrefix } from '../utils/urlFormatter';
-import { Button } from './ui/button';
 import { Edit } from 'lucide-react';
+import { useTheme } from '../hooks/useTheme';
 
 interface DocumentPreviewProps {
   courseInfo: CourseInfo;
@@ -15,42 +15,53 @@ interface DocumentPreviewProps {
 }
 
 export function DocumentPreview({ courseInfo, theoryExperiments, programmingSessions, onEditCourseInfo, onEditExperiments }: DocumentPreviewProps) {
+  const { isDark } = useTheme();
   const isTheory = courseInfo.record_type === 'Theory Record';
   const fontFamily = courseInfo.font_family || 'Times New Roman';
 
   return (
     <div className="mb-6">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-4">
         <div>
-          <h2 className="text-gray-800">Document Preview</h2>
-          <p className="text-gray-600">Review your lab record before printing</p>
+          <h2
+            className="text-2xl font-black mb-1 tracking-tight bg-clip-text text-transparent"
+            style={{ backgroundImage: isDark ? 'linear-gradient(90deg, #a5b4fc, #c084fc)' : 'linear-gradient(90deg, #3730a3, #6d28d9)' }}
+          >
+            Document Preview
+          </h2>
+          <p className="text-sm font-medium" style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>
+            Review your lab record before generating PDF
+          </p>
         </div>
         <div className="flex gap-2 print:hidden">
-          <Button
+          <button
             onClick={onEditCourseInfo}
-            variant="outline"
-            size="sm"
-            className="border-blue-300 text-blue-700 hover:bg-blue-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 hover:scale-105"
+            style={{ background: isDark ? 'rgba(59,130,246,0.15)' : 'rgba(37,99,235,0.08)', color: isDark ? '#93c5fd' : '#2563eb', border: isDark ? '1px solid rgba(59,130,246,0.30)' : '1px solid rgba(37,99,235,0.20)' }}
           >
-            <Edit className="w-4 h-4 mr-1" />
-            Edit Course Info
-          </Button>
-          <Button
+            <Edit className="w-3.5 h-3.5" /> Course Info
+          </button>
+          <button
             onClick={onEditExperiments}
-            variant="outline"
-            size="sm"
-            className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 hover:scale-105"
+            style={{ background: isDark ? 'rgba(139,92,246,0.15)' : 'rgba(147,51,234,0.08)', color: isDark ? '#c4b5fd' : '#7e22ce', border: isDark ? '1px solid rgba(139,92,246,0.30)' : '1px solid rgba(147,51,234,0.20)' }}
           >
-            <Edit className="w-4 h-4 mr-1" />
-            Edit Experiments
-          </Button>
+            <Edit className="w-3.5 h-3.5" /> Experiments
+          </button>
         </div>
       </div>
       
-      <div 
-        id="document-preview" 
-        className="bg-white border-2 border-gray-300 p-8 max-h-[600px] overflow-y-auto shadow-inner"
-        style={{ fontFamily }}
+      <div
+        id="document-preview"
+        className="p-8 max-h-[600px] overflow-y-auto rounded-xl shadow-2xl mx-auto transition-all duration-300"
+        style={{
+          fontFamily,
+          background: '#ffffff', // Document is always white paper
+          color: '#000000', // Document text is always black
+          border: isDark ? '1px solid rgba(255,255,255,0.1)' : '1px solid rgba(0,0,0,0.1)',
+          boxShadow: isDark ? '0 12px 40px rgba(0,0,0,0.8), 0 0 0 1px rgba(99,102,241,0.2)' : '0 12px 40px rgba(0,0,0,0.1)',
+          maxWidth: '850px' // A4 paper rough width scale
+        }}
       >
         {/* Header with College Logo */}
         <div className="mb-6 pb-4 border-b border-gray-300">

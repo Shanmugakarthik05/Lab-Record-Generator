@@ -3,8 +3,9 @@ import { ProgrammingSession, SubExperiment } from '../App';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
-import { Plus, Trash2, ArrowUp, ArrowDown, GripVertical, Copy, ClipboardPaste } from 'lucide-react';
+import { Plus, Trash2, ArrowUp, ArrowDown, GripVertical, Copy, ClipboardPaste, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from 'sonner';
+import { useTheme } from '../hooks/useTheme';
 
 interface ProgrammingSessionsFormProps {
   initialData: ProgrammingSession[];
@@ -23,6 +24,8 @@ const isValidURL = (url: string): boolean => {
 };
 
 export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: ProgrammingSessionsFormProps) {
+  const { isDark } = useTheme();
+
   const createEmptySession = (sessionNo: number): ProgrammingSession => ({
     session_no: sessionNo,
     date: '',
@@ -140,15 +143,42 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
 
   return (
     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto">
-      <h2 className="mb-6 text-gray-800 dark:text-slate-200 dark:text-slate-200">Programming Record Sessions</h2>
-      <p className="mb-6 text-gray-600 dark:text-slate-400 dark:text-slate-400">Add sessions with sub-experiments (A through E) and module URLs</p>
-      
-      <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
+      <h2
+        className="text-2xl font-black mb-2 tracking-tight bg-clip-text text-transparent"
+        style={{ backgroundImage: isDark ? 'linear-gradient(90deg, #a5b4fc, #c084fc)' : 'linear-gradient(90deg, #3730a3, #6d28d9)' }}
+      >
+        Programming Sessions
+      </h2>
+      <p className="mb-8 text-sm" style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>
+        Add sessions with sub-experiments (A through E) and module URLs
+      </p>
+
+      <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
         {sessions.map((session, sessionIndex) => (
-          <div key={sessionIndex} className="p-6 bg-purple-50 rounded-lg border-2 border-purple-200">
+          <div
+            key={sessionIndex}
+            className="p-5 rounded-2xl"
+            style={{
+              background: isDark ? 'rgba(12,15,38,0.80)' : 'rgba(250,245,255,0.80)',
+              border: isDark ? '1px solid rgba(139,92,246,0.20)' : '1px solid rgba(216,180,254,0.35)',
+            }}
+          >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-0.5">
+                  <button type="button" onClick={() => moveSessionUp(sessionIndex)} disabled={sessionIndex === 0}
+                    className="h-6 w-6 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
+                    style={{ background: isDark ? 'rgba(139,92,246,0.12)' : 'rgba(147,51,234,0.08)', color: isDark ? '#c4b5fd' : '#7e22ce' }}
+                  >
+                    <ArrowUp className="w-3 h-3" />
+                  </button>
+                  <button type="button" onClick={() => moveSessionDown(sessionIndex)} disabled={sessionIndex === sessions.length - 1}
+                    className="h-6 w-6 rounded-lg flex items-center justify-center transition-all disabled:opacity-30"
+                    style={{ background: isDark ? 'rgba(139,92,246,0.12)' : 'rgba(147,51,234,0.08)', color: isDark ? '#c4b5fd' : '#7e22ce' }}
+                  >
+                    <ArrowDown className="w-3 h-3" />
+                  </button>
+                </div>
                   <Button
                     type="button"
                     variant="ghost"
@@ -170,19 +200,18 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
                     <ArrowDown className="w-4 h-4" />
                   </Button>
                 </div>
-                <GripVertical className="w-5 h-5 text-purple-400" />
-                <h3 className="text-purple-900">Session {session.session_no}</h3>
+                <GripVertical className="w-4 h-4" style={{ color: isDark ? '#3d4870' : '#9ca3af' }} />
+                <span className="text-sm font-bold" style={{ color: isDark ? '#c4b5fd' : '#7e22ce' }}>
+                  Session {session.session_no}
+                </span>
               </div>
               {sessions.length > 1 && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => removeSession(sessionIndex)}
-                  className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                <button type="button" onClick={() => removeSession(sessionIndex)}
+                  className="h-7 w-7 rounded-lg flex items-center justify-center transition-all"
+                  style={{ background: isDark ? 'rgba(248,113,113,0.10)' : 'rgba(220,38,38,0.06)', color: isDark ? '#f87171' : '#dc2626' }}
                 >
-                  <Trash2 className="w-4 h-4" />
-                </Button>
+                  <Trash2 className="w-3.5 h-3.5" />
+                </button>
               )}
             </div>
 
@@ -208,110 +237,120 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
               />
             </div>
 
-            <div className="space-y-3 bg-white dark:bg-slate-900 p-4 rounded-lg">
+            <div className="mt-4 p-4 rounded-xl" style={{ background: isDark ? 'rgba(10,12,30,0.50)' : 'rgba(255,255,255,0.60)' }}>
               <div className="flex items-center justify-between mb-3">
-                <h4 className="text-purple-800">Sub-Experiments</h4>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => addSubExperiment(sessionIndex)}
-                  className="text-xs border-purple-300 text-purple-700 hover:bg-purple-50"
+                <span className="text-xs font-bold uppercase tracking-widest" style={{ color: isDark ? '#c4b5fd' : '#7e22ce' }}>
+                  Sub-Experiments
+                </span>
+                <button
+                  type="button" onClick={() => addSubExperiment(sessionIndex)}
+                  className="text-[10px] font-bold px-2 py-1 rounded-md uppercase tracking-wider"
+                  style={{ background: isDark ? 'rgba(139,92,246,0.15)' : 'rgba(147,51,234,0.08)', color: isDark ? '#c4b5fd' : '#7e22ce' }}
                 >
-                  <Plus className="w-3 h-3 mr-1" />
-                  Add Sub-Exp
-                </Button>
+                  <Plus className="w-3 h-3 inline mr-1" /> Add Sub-Exp
+                </button>
               </div>
+              
+              <div className="space-y-2">
               {session.sub_experiments.map((subExp, subIndex) => (
-                <div key={subIndex} className="grid md:grid-cols-12 gap-2 items-end p-3 bg-gray-50 dark:bg-slate-800/50 dark:bg-slate-800/50 rounded-md border border-gray-200 dark:border-slate-700 dark:border-slate-700">
+                <div key={subIndex} className="grid md:grid-cols-12 gap-2 items-end p-3 rounded-lg"
+                  style={{
+                    background: isDark ? 'rgba(15,18,40,0.80)' : '#ffffff',
+                    border: isDark ? '1px solid rgba(139,92,246,0.15)' : '1px solid rgba(216,180,254,0.40)'
+                  }}
+                >
                   <div className="md:col-span-1">
-                    <Label className="text-xs">Label</Label>
-                    <div className="h-10 flex items-center justify-center bg-purple-100 rounded-md">
-                      <span>{subExp.label}</span>
+                    <Label className="text-[10px] uppercase font-bold tracking-wider mb-1 block" style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>Label</Label>
+                    <div className="h-9 flex items-center justify-center rounded-md text-xs font-bold"
+                      style={{ background: isDark ? 'rgba(139,92,246,0.15)' : 'rgba(147,51,234,0.08)', color: isDark ? '#c4b5fd' : '#7e22ce' }}
+                    >
+                      {subExp.label}
                     </div>
                   </div>
                   <div className="md:col-span-4">
-                    <Label htmlFor={`sub-date-${sessionIndex}-${subIndex}`} className="text-xs">Date</Label>
+                    <Label htmlFor={`sub-date-${sessionIndex}-${subIndex}`} className="text-[10px] uppercase font-bold tracking-wider mb-1 block" style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>Date</Label>
                     <div className="flex gap-1">
                       <Input
-                        id={`sub-date-${sessionIndex}-${subIndex}`}
-                        type="date"
-                        value={subExp.date}
-                        onChange={(e) => updateSubExperiment(sessionIndex, subIndex, 'date', e.target.value)}
-                        className="h-10 flex-1"
+                        id={`sub-date-${sessionIndex}-${subIndex}`} type="date"
+                        value={subExp.date} onChange={(e) => updateSubExperiment(sessionIndex, subIndex, 'date', e.target.value)}
+                        className="h-9 flex-1 px-3 text-xs rounded-md"
+                        style={{
+                          background: isDark ? 'rgba(12,15,38,0.95)' : 'rgba(255,255,255,0.95)',
+                          border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(196,181,253,0.50)',
+                          color: isDark ? '#e8e9ff' : '#1e1b4b',
+                        }}
                       />
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => copyDate(subExp.date)}
-                        disabled={!subExp.date}
-                        className="px-2 h-10"
-                        title="Copy date"
+                      <button type="button" onClick={() => copyDate(subExp.date)} disabled={!subExp.date}
+                        className="h-9 w-9 flex items-center justify-center rounded-md transition-all disabled:opacity-30"
+                        style={{ background: isDark ? 'rgba(99,102,241,0.12)' : 'rgba(79,70,229,0.08)', color: isDark ? '#a5b4fc' : '#4f46e5' }} title="Copy date"
                       >
                         <Copy className="w-3 h-3" />
-                      </Button>
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => pasteDate(sessionIndex, subIndex)}
-                        disabled={!copiedDate}
-                        className="px-2 h-10"
-                        title="Paste date"
+                      </button>
+                      <button type="button" onClick={() => pasteDate(sessionIndex, subIndex)} disabled={!copiedDate}
+                        className="h-9 w-9 flex items-center justify-center rounded-md transition-all disabled:opacity-30"
+                        style={{ background: isDark ? 'rgba(99,102,241,0.12)' : 'rgba(79,70,229,0.08)', color: isDark ? '#a5b4fc' : '#4f46e5' }} title="Paste date"
                       >
                         <ClipboardPaste className="w-3 h-3" />
-                      </Button>
+                      </button>
                     </div>
                   </div>
                   <div className="md:col-span-6">
-                    <Label htmlFor={`sub-title-${sessionIndex}-${subIndex}`} className="text-xs">Title *</Label>
-                    <Input
-                      id={`sub-title-${sessionIndex}-${subIndex}`}
-                      value={subExp.title}
-                      onChange={(e) => updateSubExperiment(sessionIndex, subIndex, 'title', e.target.value)}
-                      placeholder="Display operator precedence in the infix expression"
-                      required
-                      className="h-10"
+                    <Label htmlFor={`sub-title-${sessionIndex}-${subIndex}`} className="text-[10px] uppercase font-bold tracking-wider mb-1 block" style={{ color: isDark ? '#6b7daa' : '#6b7280' }}>Title *</Label>
+                    <Input id={`sub-title-${sessionIndex}-${subIndex}`} value={subExp.title} onChange={(e) => updateSubExperiment(sessionIndex, subIndex, 'title', e.target.value)} placeholder="Display operator precedence in the infix expression" required
+                      className="h-9 text-xs rounded-md"
+                      style={{
+                        background: isDark ? 'rgba(12,15,38,0.95)' : 'rgba(255,255,255,0.95)',
+                        border: isDark ? '1px solid rgba(99,102,241,0.25)' : '1px solid rgba(196,181,253,0.50)',
+                        color: isDark ? '#e8e9ff' : '#1e1b4b',
+                      }}
                     />
                   </div>
                   <div className="md:col-span-1 flex items-end">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeSubExperiment(sessionIndex, subIndex)}
-                      className="text-red-600 hover:text-red-700 hover:bg-red-50 h-10 w-full"
+                    <button type="button" onClick={() => removeSubExperiment(sessionIndex, subIndex)}
+                      className="h-9 w-full rounded-md flex items-center justify-center transition-all"
+                      style={{ background: isDark ? 'rgba(248,113,113,0.10)' : 'rgba(220,38,38,0.06)', color: isDark ? '#f87171' : '#dc2626' }}
                     >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                      <Trash2 className="w-3 h-3" />
+                    </button>
                   </div>
                 </div>
               ))}
+              </div>
             </div>
           </div>
         ))}
       </div>
 
-      <div className="mt-6">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={addSession}
-          className="w-full border-dashed border-2"
+      <div className="mt-5">
+        <button
+          type="button" onClick={addSession}
+          className="w-full py-3 rounded-2xl text-sm font-semibold border-2 border-dashed transition-all duration-200 hover:scale-[1.01]"
+          style={{
+            borderColor: isDark ? 'rgba(139,92,246,0.30)' : 'rgba(147,51,234,0.25)',
+            color: isDark ? '#c4b5fd' : '#7e22ce',
+            background: isDark ? 'rgba(139,92,246,0.05)' : 'rgba(147,51,234,0.04)',
+          }}
         >
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="w-4 h-4 inline mr-2" />
           Add Another Session
-        </Button>
+        </button>
       </div>
 
-      <div className="flex gap-4 justify-end mt-6">
-        <Button type="button" variant="outline" onClick={onBack}>
-          Back
-        </Button>
-        <Button type="submit" disabled={!isValid}>
-          Generate Document
-        </Button>
+      <div className="flex gap-3 justify-end mt-6">
+        <button
+          type="button" onClick={onBack}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all"
+          style={{ background: isDark ? 'rgba(99,102,241,0.08)' : 'rgba(79,70,229,0.06)', border: isDark ? '1px solid rgba(99,102,241,0.20)' : '1px solid rgba(79,70,229,0.20)', color: isDark ? '#a5b4fc' : '#4f46e5' }}
+        >
+          <ChevronLeft className="w-4 h-4" /> Back
+        </button>
+        <button
+          type="submit" disabled={!isValid}
+          className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold text-white transition-all hover:scale-105 disabled:opacity-40 disabled:cursor-not-allowed disabled:transform-none"
+          style={{ background: isValid ? (isDark ? 'linear-gradient(135deg, #6366f1, #a855f7)' : 'linear-gradient(135deg, #4f46e5, #7c3aed)') : isDark ? 'rgba(99,102,241,0.30)' : 'rgba(79,70,229,0.30)' }}
+        >
+          Generate <ChevronRight className="w-4 h-4" />
+        </button>
       </div>
     </form>
   );
