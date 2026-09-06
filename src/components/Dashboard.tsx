@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { History } from './History';
-import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut, FileSignature, BookOpen, FlaskConical, Wand2, ChevronRight, Sun, Moon } from 'lucide-react';
+import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut, FileSignature, BookOpen, FlaskConical, Wand2, ChevronRight, Sun, Moon, Heart, Sparkles } from 'lucide-react';
 import {
   saveToHistory,
   getStudentInfo,
@@ -597,7 +597,13 @@ export function Dashboard() {
                 <span className="font-medium">SAVEETHA ENGINEERING COLLEGE</span>
               </div>
               <div className="w-1 h-1 bg-gray-300 dark:bg-slate-700 rounded-full hidden sm:block"></div>
-              <span className="hidden sm:block text-gray-500 dark:text-gray-400 font-medium">By SHANMUGAKARTHIK G</span>
+              <div className="hidden sm:flex items-center gap-2 group cursor-pointer">
+                <span className="text-gray-500 dark:text-gray-400 font-medium group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 dark:group-hover:from-blue-400 dark:group-hover:to-purple-400 transition-all duration-300 relative">
+                  Crafted by <span className="font-bold">SHANMUGAKARTHIK G</span>
+                  <div className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-blue-600 to-purple-600 group-hover:w-full transition-all duration-500 rounded-full"></div>
+                </span>
+                <Sparkles className="w-4 h-4 text-purple-500 opacity-0 -translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-500 rotate-0 group-hover:rotate-12" />
+              </div>
             </div>
           </div>
         </div>
