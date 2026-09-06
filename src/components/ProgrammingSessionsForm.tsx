@@ -140,8 +140,8 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
 
   return (
     <form onSubmit={handleSubmit} className="max-w-5xl mx-auto">
-      <h2 className="mb-6 text-gray-800">Programming Record Sessions</h2>
-      <p className="mb-6 text-gray-600">Add sessions with sub-experiments (A through E) and module URLs</p>
+      <h2 className="mb-6 text-gray-800 dark:text-slate-200 dark:text-slate-200">Programming Record Sessions</h2>
+      <p className="mb-6 text-gray-600 dark:text-slate-400 dark:text-slate-400">Add sessions with sub-experiments (A through E) and module URLs</p>
       
       <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
         {sessions.map((session, sessionIndex) => (
@@ -208,7 +208,7 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
               />
             </div>
 
-            <div className="space-y-3 bg-white p-4 rounded-lg">
+            <div className="space-y-3 bg-white dark:bg-slate-900 p-4 rounded-lg">
               <div className="flex items-center justify-between mb-3">
                 <h4 className="text-purple-800">Sub-Experiments</h4>
                 <Button
@@ -223,7 +223,7 @@ export function ProgrammingSessionsForm({ initialData, onSubmit, onBack }: Progr
                 </Button>
               </div>
               {session.sub_experiments.map((subExp, subIndex) => (
-                <div key={subIndex} className="grid md:grid-cols-12 gap-2 items-end p-3 bg-gray-50 rounded-md border border-gray-200">
+                <div key={subIndex} className="grid md:grid-cols-12 gap-2 items-end p-3 bg-gray-50 dark:bg-slate-800/50 dark:bg-slate-800/50 rounded-md border border-gray-200 dark:border-slate-700 dark:border-slate-700">
                   <div className="md:col-span-1">
                     <Label className="text-xs">Label</Label>
                     <div className="h-10 flex items-center justify-center bg-purple-100 rounded-md">

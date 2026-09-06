@@ -36,12 +36,12 @@ export function CourseInfoForm({ initialData, onSubmit, onBack }: CourseInfoForm
 
   return (
     <form onSubmit={handleSubmit} className="max-w-2xl mx-auto">
-      <h2 className="mb-6 text-gray-800">Course & Student Information</h2>
+      <h2 className="mb-6 text-gray-800 dark:text-slate-200 dark:text-slate-200">Course & Student Information</h2>
       
       <div className="space-y-6">
         {/* Required Fields */}
-        <div className="p-6 bg-blue-50 rounded-lg space-y-4">
-          <h3 className="text-blue-900 mb-4">Required Information</h3>
+        <div className="p-6 bg-blue-50 dark:bg-slate-800 dark:bg-slate-800 rounded-lg space-y-4">
+          <h3 className="text-blue-900 dark:text-blue-100 dark:text-blue-100 mb-4">Required Information</h3>
           
           <div className="grid md:grid-cols-2 gap-4">
             <div>
@@ -91,8 +91,8 @@ export function CourseInfoForm({ initialData, onSubmit, onBack }: CourseInfoForm
         </div>
 
         {/* Optional Fields */}
-        <div className="p-6 bg-gray-50 rounded-lg space-y-4">
-          <h3 className="text-gray-700 mb-4">Optional Information</h3>
+        <div className="p-6 bg-gray-50 dark:bg-slate-800/50 dark:bg-slate-800/50 rounded-lg space-y-4">
+          <h3 className="text-gray-700 dark:text-slate-300 dark:text-slate-300 mb-4">Optional Information</h3>
           
           <div>
             <Label htmlFor="font_family">Font Style</Label>

@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
 } from './ui/alert-dialog';
 import { History } from './History';
-import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut, FileSignature, BookOpen, FlaskConical, Wand2, ChevronRight } from 'lucide-react';
+import { FileText, GraduationCap, Building2, History as HistoryIcon, LogOut, FileSignature, BookOpen, FlaskConical, Wand2, ChevronRight, Sun, Moon } from 'lucide-react';
 import {
   saveToHistory,
   getStudentInfo,
@@ -39,8 +39,10 @@ import {
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
 import type { CourseInfo, TheoryExperiment, ProgrammingSession } from '../App';
+import { useTheme } from '../hooks/useTheme';
 
 export function Dashboard() {
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [viewMode, setViewMode] = useState<'main' | 'history'>('main');
@@ -358,21 +360,21 @@ export function Dashboard() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-tr from-blue-100 via-indigo-50 to-purple-100 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-tr from-blue-100 via-indigo-50 to-purple-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 relative overflow-hidden transition-colors duration-500">
       {/* Decorative blurred background blobs */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob pointer-events-none"></div>
-      <div className="absolute top-0 right-0 w-96 h-96 bg-purple-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 pointer-events-none"></div>
-      <div className="absolute -bottom-8 left-40 w-96 h-96 bg-indigo-400/20 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000 pointer-events-none"></div>
+      <div className="absolute top-0 left-0 w-96 h-96 bg-blue-400/20 dark:bg-blue-600/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob pointer-events-none"></div>
+      <div className="absolute top-0 right-0 w-96 h-96 bg-purple-400/20 dark:bg-purple-600/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-2000 pointer-events-none"></div>
+      <div className="absolute -bottom-8 left-40 w-96 h-96 bg-indigo-400/20 dark:bg-indigo-600/10 rounded-full mix-blend-multiply filter blur-3xl opacity-70 animate-blob animation-delay-4000 pointer-events-none"></div>
 
       {/* Top Navigation Bar */}
-      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/70 border-b border-white/40 shadow-sm">
+      <nav className="sticky top-0 z-50 backdrop-blur-md bg-white/70 dark:bg-slate-900/60 border-b border-white/40 dark:border-white/10 shadow-sm transition-colors duration-500">
         <div className="container mx-auto px-4 max-w-6xl h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-2 rounded-xl shadow-md">
               <FileText className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-800 to-purple-800 bg-clip-text text-transparent">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-blue-800 to-purple-800 dark:from-blue-400 dark:to-purple-400 bg-clip-text text-transparent">
                 Lab Record Generator
               </h1>
             </div>
@@ -382,10 +384,19 @@ export function Dashboard() {
             <Button
               onClick={() => setViewMode(viewMode === 'main' ? 'history' : 'main')}
               variant="outline"
-              className="hidden sm:flex border-purple-200 text-purple-700 hover:bg-purple-100/50 backdrop-blur-sm transition-all shadow-sm"
+              className="hidden sm:flex border-purple-200 dark:border-purple-800/50 text-purple-700 dark:text-purple-300 hover:bg-purple-100/50 dark:hover:bg-purple-900/30 backdrop-blur-sm transition-all shadow-sm"
             >
               <HistoryIcon className="w-4 h-4 mr-2" />
               {viewMode === 'main' ? 'View History' : 'Back to Generator'}
+            </Button>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition-colors"
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5 text-yellow-400" /> : <Moon className="w-5 h-5 text-slate-600" />}
             </Button>
 
             <DropdownMenu>
@@ -399,13 +410,13 @@ export function Dashboard() {
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl border-white/50 bg-white/95 backdrop-blur-xl p-2">
+              <DropdownMenuContent align="end" className="w-64 rounded-xl shadow-xl border-white/50 dark:border-white/10 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl p-2 transition-colors duration-500">
                 <DropdownMenuLabel className="pb-4">
                   <div className="flex flex-col space-y-1">
-                    <p className="font-semibold text-gray-800">{getUserDisplayName()}</p>
-                    <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                    <p className="font-semibold text-gray-800 dark:text-gray-200">{getUserDisplayName()}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{user.email}</p>
                     {studentProfile?.department && (
-                      <span className="mt-2 inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 text-blue-700 w-max border border-blue-100">
+                      <span className="mt-2 inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 w-max border border-blue-100 dark:border-blue-800/50">
                         Dept: {studentProfile.department}
                       </span>
                     )}
@@ -437,7 +448,7 @@ export function Dashboard() {
       <div className="container mx-auto px-4 py-8 max-w-5xl relative z-10">
         {/* Main Content or History */}
         {viewMode === 'history' ? (
-          <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-3xl p-6 sm:p-8">
+          <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-3xl p-6 sm:p-8 transition-colors duration-500">
             <History 
               onLoadRecord={handleLoadRecord} 
               onClose={() => setViewMode('main')} 
@@ -451,9 +462,9 @@ export function Dashboard() {
             {/* Modern Progress Indicator */}
             <div className="mb-10 max-w-3xl mx-auto">
               <div className="flex items-center justify-between relative">
-                <div className="absolute left-0 right-0 top-1/2 h-1 bg-gray-200/60 -z-10 rounded-full transform -translate-y-1/2"></div>
+                <div className="absolute left-0 right-0 top-1/2 h-1 bg-gray-200/60 dark:bg-slate-800 -z-10 rounded-full transform -translate-y-1/2 transition-colors"></div>
                 <div 
-                  className="absolute left-0 top-1/2 h-1 bg-gradient-to-r from-blue-600 to-purple-600 -z-10 rounded-full transform -translate-y-1/2 transition-all duration-500 ease-out"
+                  className="absolute left-0 top-1/2 h-1 bg-gradient-to-r from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 -z-10 rounded-full transform -translate-y-1/2 transition-all duration-500 ease-out"
                   style={{ width: `${((step - 1) / 3) * 100}%` }}
                 ></div>
                 
@@ -467,16 +478,16 @@ export function Dashboard() {
                     <div
                       className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 shadow-sm ${
                         step === s.id
-                          ? 'bg-gradient-to-br from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/30 scale-110'
+                          ? 'bg-gradient-to-br from-blue-600 to-purple-600 dark:from-blue-500 dark:to-purple-500 text-white shadow-lg shadow-blue-500/30 scale-110'
                           : step > s.id
-                          ? 'bg-white text-blue-600 border-2 border-blue-600'
-                          : 'bg-white/80 text-gray-400 border-2 border-gray-100 backdrop-blur-sm'
+                          ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 border-2 border-blue-600 dark:border-blue-500'
+                          : 'bg-white/80 dark:bg-slate-800/80 text-gray-400 dark:text-slate-500 border-2 border-gray-100 dark:border-slate-700 backdrop-blur-sm'
                       }`}
                     >
                       <s.icon className={`w-5 h-5 ${step === s.id ? 'animate-pulse' : ''}`} />
                     </div>
                     <span className={`text-xs font-medium transition-colors ${
-                      step === s.id ? 'text-blue-700' : step > s.id ? 'text-gray-700' : 'text-gray-400'
+                      step === s.id ? 'text-blue-700 dark:text-blue-400' : step > s.id ? 'text-gray-700 dark:text-gray-300' : 'text-gray-400 dark:text-gray-600'
                     }`}>
                       {s.label}
                     </span>
@@ -486,7 +497,7 @@ export function Dashboard() {
             </div>
 
             {/* Step Content */}
-            <div className="bg-white/80 backdrop-blur-xl border border-white/50 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-3xl p-6 sm:p-10 transition-all duration-300">
+            <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl border border-white/50 dark:border-white/10 shadow-[0_8px_30px_rgb(0,0,0,0.06)] rounded-3xl p-6 sm:p-10 transition-all duration-500">
               {step === 1 && <RecordTypeSelector onSelect={handleRecordTypeSelect} />}
               
               {step === 2 && (
@@ -574,19 +585,19 @@ export function Dashboard() {
 
         {/* Footer */}
         <div className="mt-12 pb-8 flex justify-center">
-          <div className="bg-white/60 backdrop-blur-md border border-white/40 rounded-full py-3 px-8 shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex items-center gap-4 text-sm text-gray-600">
+          <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-md border border-white/40 dark:border-white/10 rounded-full py-3 px-8 shadow-sm hover:shadow-md transition-all duration-500">
+            <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
               <div className="flex items-center gap-2">
-                <GraduationCap className="w-4 h-4 text-purple-600" />
+                <GraduationCap className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                 <span className="font-medium">B. TECH IT</span>
               </div>
-              <div className="w-1 h-1 bg-gray-300 rounded-full"></div>
+              <div className="w-1 h-1 bg-gray-300 dark:bg-slate-700 rounded-full"></div>
               <div className="flex items-center gap-2">
-                <Building2 className="w-4 h-4 text-blue-600" />
+                <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 <span className="font-medium">SAVEETHA ENGINEERING COLLEGE</span>
               </div>
-              <div className="w-1 h-1 bg-gray-300 rounded-full hidden sm:block"></div>
-              <span className="hidden sm:block text-gray-500 font-medium">By SHANMUGAKARTHIK G</span>
+              <div className="w-1 h-1 bg-gray-300 dark:bg-slate-700 rounded-full hidden sm:block"></div>
+              <span className="hidden sm:block text-gray-500 dark:text-gray-400 font-medium">By SHANMUGAKARTHIK G</span>
             </div>
           </div>
         </div>
@@ -594,10 +605,10 @@ export function Dashboard() {
       
       {/* Profile Setup Dialog */}
       <AlertDialog open={showProfileSetup} onOpenChange={() => {}}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-white dark:bg-slate-900 border-white/50 dark:border-slate-800 text-gray-900 dark:text-gray-100">
           <AlertDialogHeader>
             <AlertDialogTitle>Complete Your Profile</AlertDialogTitle>
-            <AlertDialogDescription>
+            <AlertDialogDescription className="text-gray-500 dark:text-gray-400">
               Please enter your details to set up your profile and enable community features.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -606,7 +617,7 @@ export function Dashboard() {
               <label className="text-sm font-medium">Full Name</label>
               <input 
                 type="text" 
-                className="w-full p-2 border rounded-md"
+                className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800"
                 placeholder="e.g. John Doe"
                 value={profileForm.student_name}
                 onChange={e => setProfileForm(p => ({ ...p, student_name: e.target.value }))}
@@ -616,7 +627,7 @@ export function Dashboard() {
               <label className="text-sm font-medium">Register Number</label>
               <input 
                 type="text" 
-                className="w-full p-2 border rounded-md"
+                className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800"
                 placeholder="e.g. 21152012345"
                 value={profileForm.register_number}
                 onChange={e => setProfileForm(p => ({ ...p, register_number: e.target.value }))}
@@ -625,7 +636,7 @@ export function Dashboard() {
             <div className="space-y-2">
               <label className="text-sm font-medium">Department</label>
               <select 
-                className="w-full p-2 border rounded-md bg-white"
+                className="w-full p-2 border border-gray-300 dark:border-slate-700 rounded-md bg-white dark:bg-slate-800"
                 value={profileForm.department}
                 onChange={e => setProfileForm(p => ({ ...p, department: e.target.value }))}
               >

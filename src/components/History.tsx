@@ -233,10 +233,10 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
 
     if (categories.length === 0) {
       return (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
+        <div className="text-center py-12 bg-gray-50 dark:bg-slate-800/50 dark:bg-slate-800/50 rounded-lg">
           <Globe className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <p className="text-gray-600">No community records available yet</p>
-          <p className="text-gray-500 text-sm mt-2">
+          <p className="text-gray-600 dark:text-slate-400 dark:text-slate-400">No community records available yet</p>
+          <p className="text-gray-500 dark:text-slate-400 dark:text-slate-400 text-sm mt-2">
             Share your completed records to contribute to the community!
           </p>
         </div>
@@ -254,7 +254,7 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
           }
 
           return (
-            <div key={category} className="border-2 border-gray-200 rounded-lg overflow-hidden">
+            <div key={category} className="border-2 border-gray-200 dark:border-slate-700 dark:border-slate-700 rounded-lg overflow-hidden">
               <button
                 onClick={() => toggleCategory(category)}
                 className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-50 to-purple-50 hover:from-blue-100 hover:to-purple-100 transition-colors"
@@ -266,8 +266,8 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
                     <ChevronRight className="w-5 h-5 text-blue-600" />
                   )}
                   <div className="text-left">
-                    <h3 className="font-semibold text-gray-800">{category}</h3>
-                    <p className="text-sm text-gray-600">
+                    <h3 className="font-semibold text-gray-800 dark:text-slate-200 dark:text-slate-200">{category}</h3>
+                    <p className="text-sm text-gray-600 dark:text-slate-400 dark:text-slate-400">
                       {records.length} {records.length === 1 ? 'record' : 'records'}
                     </p>
                   </div>
@@ -287,11 +287,11 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
               </button>
 
               {isExpanded && (
-                <div className="p-4 space-y-3 bg-white">
+                <div className="p-4 space-y-3 bg-white dark:bg-slate-900">
                   {records.map((record) => (
                     <div
                       key={record.id}
-                      className="bg-gray-50 rounded-lg border border-gray-200 p-4 hover:shadow-md transition-shadow"
+                      className="bg-gray-50 dark:bg-slate-800/50 dark:bg-slate-800/50 rounded-lg border border-gray-200 dark:border-slate-700 dark:border-slate-700 p-4 hover:shadow-md transition-shadow"
                     >
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 space-y-2">
@@ -310,31 +310,31 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
                           </div>
                           
                           <div>
-                            <h4 className="font-medium text-gray-800">{record.courseInfo.course_title}</h4>
+                            <h4 className="font-medium text-gray-800 dark:text-slate-200 dark:text-slate-200">{record.courseInfo.course_title}</h4>
                           </div>
                           
-                          <div className="text-sm text-gray-600 space-y-1">
+                          <div className="text-sm text-gray-600 dark:text-slate-400 dark:text-slate-400 space-y-1">
                             <div>
-                              <span className="text-gray-500">Student:</span>{' '}
+                              <span className="text-gray-500 dark:text-slate-400 dark:text-slate-400">Student:</span>{' '}
                               {record.courseInfo.student_name} ({record.courseInfo.register_number})
                             </div>
                             <div>
-                              <span className="text-gray-500">Department:</span>{' '}
+                              <span className="text-gray-500 dark:text-slate-400 dark:text-slate-400">Department:</span>{' '}
                               {record.courseInfo.department} • {record.courseInfo.semester}
                             </div>
                             {record.courseInfo.record_type === 'Theory Record' && (
                               <div>
-                                <span className="text-gray-500">Experiments:</span>{' '}
+                                <span className="text-gray-500 dark:text-slate-400 dark:text-slate-400">Experiments:</span>{' '}
                                 {record.theoryExperiments.length}
                               </div>
                             )}
                             {record.courseInfo.record_type === 'Programming Record' && (
                               <div>
-                                <span className="text-gray-500">Sessions:</span>{' '}
+                                <span className="text-gray-500 dark:text-slate-400 dark:text-slate-400">Sessions:</span>{' '}
                                 {record.programmingSessions.length}
                               </div>
                             )}
-                            <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-slate-400 dark:text-slate-400">
                               <Calendar className="w-3 h-3" />
                               Shared: {formatDateTime(record.savedAt)}
                             </div>
@@ -367,11 +367,11 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
     
     if (filteredRecords.length === 0) {
       return (
-        <div className="text-center py-12 bg-gray-50 rounded-lg">
+        <div className="text-center py-12 bg-gray-50 dark:bg-slate-800/50 dark:bg-slate-800/50 rounded-lg">
           <FileText className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <p className="text-gray-600">{emptyMessage}</p>
+          <p className="text-gray-600 dark:text-slate-400 dark:text-slate-400">{emptyMessage}</p>
           {searchQuery && (
-            <p className="text-gray-500 text-sm mt-2">
+            <p className="text-gray-500 dark:text-slate-400 dark:text-slate-400 text-sm mt-2">
               Try adjusting your search query
             </p>
           )}
@@ -384,7 +384,7 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
         {filteredRecords.map((record) => (
           <div
             key={record.id}
-            className="bg-white rounded-lg border-2 border-gray-200 p-4 hover:shadow-md transition-shadow"
+            className="bg-white dark:bg-slate-900 rounded-lg border-2 border-gray-200 dark:border-slate-700 dark:border-slate-700 p-4 hover:shadow-md transition-shadow"
           >
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1 space-y-2">
@@ -426,31 +426,31 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
                 </div>
                 
                 <div>
-                  <h3 className="text-gray-800">{record.courseInfo.course_title}</h3>
+                  <h3 className="text-gray-800 dark:text-slate-200 dark:text-slate-200">{record.courseInfo.course_title}</h3>
                 </div>
                 
-                <div className="text-sm text-gray-600 space-y-1">
+                <div className="text-sm text-gray-600 dark:text-slate-400 dark:text-slate-400 space-y-1">
                   <div>
-                    <span className="text-gray-500">Student:</span>{' '}
+                    <span className="text-gray-500 dark:text-slate-400 dark:text-slate-400">Student:</span>{' '}
                     {record.courseInfo.student_name} ({record.courseInfo.register_number})
                   </div>
                   <div>
-                    <span className="text-gray-500">Department:</span>{' '}
+                    <span className="text-gray-500 dark:text-slate-400 dark:text-slate-400">Department:</span>{' '}
                     {record.courseInfo.department} • {record.courseInfo.semester}
                   </div>
                   {record.courseInfo.record_type === 'Theory Record' && (
                     <div>
-                      <span className="text-gray-500">Experiments:</span>{' '}
+                      <span className="text-gray-500 dark:text-slate-400 dark:text-slate-400">Experiments:</span>{' '}
                       {record.theoryExperiments.length}
                     </div>
                   )}
                   {record.courseInfo.record_type === 'Programming Record' && (
                     <div>
-                      <span className="text-gray-500">Sessions:</span>{' '}
+                      <span className="text-gray-500 dark:text-slate-400 dark:text-slate-400">Sessions:</span>{' '}
                       {record.programmingSessions.length}
                     </div>
                   )}
-                  <div className="flex items-center gap-1 text-xs text-gray-500">
+                  <div className="flex items-center gap-1 text-xs text-gray-500 dark:text-slate-400 dark:text-slate-400">
                     <Calendar className="w-3 h-3" />
                     Saved: {formatDateTime(record.savedAt)}
                   </div>
@@ -483,7 +483,7 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
                     className={`${
                       record.isShared
                         ? 'text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 border-cyan-300'
-                        : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 border-blue-300'
+                        : 'text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:bg-slate-800 dark:bg-slate-800 border-blue-300'
                     }`}
                   >
                     {record.isShared ? (
@@ -519,8 +519,8 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-gray-800">History</h2>
-          <p className="text-gray-600">Your saved, draft, and shared lab records</p>
+          <h2 className="text-gray-800 dark:text-slate-200 dark:text-slate-200">History</h2>
+          <p className="text-gray-600 dark:text-slate-400 dark:text-slate-400">Your saved, draft, and shared lab records</p>
         </div>
         <Button onClick={onClose} variant="outline">
           Close
@@ -575,7 +575,7 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
         </TabsContent>
 
         <TabsContent value="shared">
-          <div className="mb-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mb-4 p-4 bg-blue-50 dark:bg-slate-800 dark:bg-slate-800 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
               <Users className="w-4 h-4 inline mr-2" />
               Browse records shared by other users. You can load and edit them to create your own version.
@@ -588,11 +588,11 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
           <div className="space-y-4">
             <div className="flex items-center justify-between bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg border border-blue-200">
               <div>
-                <h3 className="font-semibold text-gray-800 flex items-center gap-2">
+                <h3 className="font-semibold text-gray-800 dark:text-slate-200 dark:text-slate-200 flex items-center gap-2">
                   <Globe className="w-5 h-5 text-blue-600" />
                   Community Records
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm text-gray-600 dark:text-slate-400 dark:text-slate-400 mt-1">
                   Explore lab records shared by all users, organized by category
                 </p>
               </div>
@@ -603,7 +603,7 @@ export function History({ onLoadRecord, onClose, userId, userName, studentProfil
                     className={`px-3 py-1.5 text-sm rounded-full font-medium transition-colors ${
                       filterMyDept 
                         ? 'bg-blue-600 text-white' 
-                        : 'bg-white text-gray-600 border border-gray-300 hover:bg-gray-50'
+                        : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-slate-400 dark:text-slate-400 border border-gray-300 dark:border-slate-700 dark:border-slate-700 hover:bg-gray-50 dark:bg-slate-800/50 dark:bg-slate-800/50'
                     }`}
                   >
                     My Dept ({studentProfile.department})

@@ -117,12 +117,12 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
 
   return (
     <form onSubmit={handleSubmit} className="max-w-4xl mx-auto">
-      <h2 className="mb-6 text-gray-800">Theory Record Experiments</h2>
-      <p className="mb-6 text-gray-600">Add all experiments with their details and GitHub URLs</p>
+      <h2 className="mb-6 text-gray-800 dark:text-slate-200 dark:text-slate-200">Theory Record Experiments</h2>
+      <p className="mb-6 text-gray-600 dark:text-slate-400 dark:text-slate-400">Add all experiments with their details and GitHub URLs</p>
       
       <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2">
         {experiments.map((exp, index) => (
-          <div key={index} className="p-6 bg-gray-50 rounded-lg border-2 border-gray-200 relative">
+          <div key={index} className="p-6 bg-gray-50 dark:bg-slate-800/50 dark:bg-slate-800/50 rounded-lg border-2 border-gray-200 dark:border-slate-700 dark:border-slate-700 relative">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
                 <div className="flex flex-col gap-1">
@@ -132,7 +132,7 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
                     size="sm"
                     onClick={() => moveExperimentUp(index)}
                     disabled={index === 0}
-                    className="h-6 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-30"
+                    className="h-6 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:bg-slate-800 dark:bg-slate-800 disabled:opacity-30"
                   >
                     <ArrowUp className="w-4 h-4" />
                   </Button>
@@ -142,13 +142,13 @@ export function TheoryExperimentsForm({ initialData, onSubmit, onBack }: TheoryE
                     size="sm"
                     onClick={() => moveExperimentDown(index)}
                     disabled={index === experiments.length - 1}
-                    className="h-6 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 disabled:opacity-30"
+                    className="h-6 px-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 dark:bg-slate-800 dark:bg-slate-800 disabled:opacity-30"
                   >
                     <ArrowDown className="w-4 h-4" />
                   </Button>
                 </div>
                 <GripVertical className="w-5 h-5 text-gray-400" />
-                <h3 className="text-gray-700">Experiment {exp.exp_no}</h3>
+                <h3 className="text-gray-700 dark:text-slate-300 dark:text-slate-300">Experiment {exp.exp_no}</h3>
               </div>
               {experiments.length > 1 && (
                 <Button
