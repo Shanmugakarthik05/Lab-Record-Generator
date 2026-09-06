@@ -4,7 +4,7 @@ import { auth, googleProvider } from '../utils/firebase/config';
 import {
   signInWithEmailAndPassword,
   createUserWithEmailAndPassword,
-  signInWithRedirect,
+  signInWithPopup,
   getRedirectResult,
   sendPasswordResetEmail,
   updateProfile,
@@ -255,9 +255,15 @@ export function LoginPage() {
     finally { setLoading(false); }
   };
 
-  const handleGoogle = () => {
+  const handleGoogle = async () => {
     setError(''); setLoading(true);
-    signInWithRedirect(auth, googleProvider).catch((e: any) => { err(getFriendly(e.code)); setLoading(false); });
+    try {
+      await signInWithPopup(auth, googleProvider);
+      navigate('/dashboard');
+    } catch (e: any) {
+      err(getFriendly(e.code));
+      setLoading(false);
+    }
   };
 
   const handleReset = async (e: React.FormEvent) => {
